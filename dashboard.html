@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop Monitoring</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #2b2d42;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+            --danger: #f72585;
+            --gray: #adb5bd;
+            --dark-gray: #495057;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom, #7da6d5, #ffffff);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h2 {
+            font-weight: 600;
+            font-size: 1.5rem;
+        }
+        
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0.5rem;
+            border-radius: 50px;
+        }
+        
+        .profile:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .profile img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid white;
+            object-fit: cover;
+        }
+        
+        .profile-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-name {
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+        
+        .profile-nim {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .container {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .dashboard-title {
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+            font-weight: 600;
+            font-size: 1.8rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+        }
+        
+        .power-usage::after {
+            background: var(--accent);
+        }
+        
+        .month-history::after {
+            background: var(--success);
+        }
+        
+        .month-cost::after {
+            background: var(--warning);
+        }
+        
+        .stat-title {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .stat-subtext {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 0.5rem;
+        }
+        
+        .stat-icon {
+            font-size: 1.2rem;
+        }
+        
+        .workshops-title {
+            text-align: center;
+            margin: 2rem 0 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .workshop-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+        
+        .workshop-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .workshop-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .workshop-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .workshop-info {
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .workshop-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        
+        .workshop-status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            background-color: var(--success);
+            color: white;
+            position: absolute;
+            top: -15px;
+            right: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .workshop-desc {
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .workshop-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .footer {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 3rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .stat-card, .workshop-card {
+            animation: fadeIn 0.6s ease forwards;
+        }
+        
+        .workshop-card:nth-child(1) { animation-delay: 0.1s; }
+        .workshop-card:nth-child(2) { animation-delay: 0.2s; }
+        .workshop-card:nth-child(3) { animation-delay: 0.3s; }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .workshop-image {
+                height: 160px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 1rem;
+            }
+            
+            .profile {
+                margin-top: 1rem;
+            }
+            
+            .dashboard-title {
+                font-size: 1.5rem;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .workshop-container {
+                grid-template-columns: 1fr;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .workshop-info {
+                padding: 1rem;
+            }
+            
+            .workshop-image {
+                height: 140px;
+            }
+            
+            .footer {
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Workshop Monitoring Dashboard</h2>
+        <div class="profile" onclick="navigate('profil.html')">
+            <img src="assets/img/ibnu_formal-removebg-preview 1.png" alt="Profile">
+            <div class="profile-info">
+                <span class="profile-name">Muhammad Ibnu Akbar</span>
+                <span class="profile-nim">NIM: 3232401064</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="dashboard-title">Workshop Energy Monitoring</h1>
+        
+        <div class="stats-container">
+            <div class="stat-card power-usage">
+                <div class="stat-title">
+                    <i class="fas fa-bolt stat-icon"></i>
+                    Power Usage Today
+                </div>
+                <div class="stat-value">12.5 kWh</div>
+                <div class="stat-subtext">+2.1% from yesterday</div>
+            </div>
+            
+            <div class="stat-card month-history" onclick="navigate('history.html')">
+                <div class="stat-title">
+                    <i class="fas fa-chart-line stat-icon"></i>
+                    Monthly Consumption
+                </div>
+                <div class="stat-value">375 kWh</div>
+                <div class="stat-subtext">View full history →</div>
+            </div>
+            
+            <div class="stat-card month-cost" onclick="navigate('history.html')">
+                <div class="stat-title">
+                    <i class="fas fa-money-bill-wave stat-icon"></i>
+                    Monthly Cost
+                </div>
+                <div class="stat-value">Rp 560,000</div>
+                <div class="stat-subtext">Estimated savings: Rp 120,000</div>
+            </div>
+        </div>
+        
+        <h2 class="workshops-title">Workshop Rooms</h2>
+        
+        <div class="workshop-container">
+            <div class="workshop-card" onclick="navigate('ws23.html')">
+                <img src="assets/img/23room 1.png" alt="Workshop 2.3" class="workshop-image">
+                <div class="workshop-info">
+                    <span class="workshop-status">Active</span>
+                    <h3 class="workshop-name">Workshop 2.3</h3>
+                    <p class="workshop-desc">Main workshop with 15 active devices</p>
+                    <div class="workshop-details">
+                        <div class="detail-item">
+                            <i class="fas fa-plug"></i>
+                            <span>8.2 kWh today</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-users"></i>
+                            <span>12 people</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="workshop-card" onclick="navigate('ws22.html')">
+                <img src="assets/img/ruang22 1.png" alt="Workshop 2.2" class="workshop-image">
+                <div class="workshop-info">
+                    <span class="workshop-status" style="background-color: var(--warning)">Maintenance</span>
+                    <h3 class="workshop-name">Workshop 2.2</h3>
+                    <p class="workshop-desc">Secondary workshop with 10 devices</p>
+                    <div class="workshop-details">
+                        <div class="detail-item">
+                            <i class="fas fa-plug"></i>
+                            <span>3.1 kWh today</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-users"></i>
+                            <span>6 people</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="workshop-card" onclick="navigate('ws24.html')">
+                <img src="assets/img/24room 1.png" alt="Workshop 2.4" class="workshop-image">
+                <div class="workshop-info">
+                    <span class="workshop-status">Active</span>
+                    <h3 class="workshop-name">Workshop 2.4</h3>
+                    <p class="workshop-desc">Special projects workshop</p>
+                    <div class="workshop-details">
+                        <div class="detail-item">
+                            <i class="fas fa-plug"></i>
+                            <span>5.7 kWh today</span>
+                        </div>
+                        <div class="detail-item">
+                            <i class="fas fa-users"></i>
+                            <span>9 people</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2025 Workshop Monitoring System | Developed by Muhammad Ibnu Akbar
+    </div>
+
+    <script>
+        function navigate(page) {
+            window.location.href = page;
+        }
+    </script>
+    <!-- Add these in the <head> section or right before your closing </body> tag -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+     <script src="dashboard.js"></script>
+</body>
+</html>

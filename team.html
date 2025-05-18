@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUBIOT Team - Innovators in Smart Technology</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2E2977;
+            --secondary: #1E90FF;
+            --accent: #FF6F91;
+            --light: #FFFFFF;
+            --dark: #333333;
+            --gray: #F5F5F5;
+            --border: #E0E0E0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--gray);
+            padding: 40px 20px;
+        }
+        
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            background: var(--light);
+            border-radius: 20px;
+            overflow: hidden;
+            padding: 50px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .logo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 30px;
+        }
+        
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .about-text {
+            font-size: 18px;
+            color: var(--dark);
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 60px 0 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--secondary);
+        }
+        
+        /* Team Section */
+        .team-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .team-member {
+            background: var(--light);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border);
+        }
+        
+        .team-member:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .member-photo-container {
+            height: 300px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .member-photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .team-member:hover .member-photo {
+            transform: scale(1.05);
+        }
+        
+        .member-info {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .member-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+        
+        .member-role {
+            font-size: 14px;
+            color: var(--secondary);
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        
+        .member-social {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .social-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        /* Colorful hover effects for each member */
+        .team-member:nth-child(1) .social-icon {
+            background: #2E2977;
+            color: white;
+        }
+        .team-member:nth-child(1) .social-icon:hover {
+            background: #FF6F91;
+            transform: scale(1.1);
+        }
+        
+        .team-member:nth-child(2) .social-icon {
+            background: #1E90FF;
+            color: white;
+        }
+        .team-member:nth-child(2) .social-icon:hover {
+            background: #FFD700;
+            transform: scale(1.1);
+        }
+        
+        .team-member:nth-child(3) .social-icon {
+            background: #008080;
+            color: white;
+        }
+        .team-member:nth-child(3) .social-icon:hover {
+            background: #FF6347;
+            transform: scale(1.1);
+        }
+        
+        .team-member:nth-child(4) .social-icon {
+            background: #8B4513;
+            color: white;
+        }
+        .team-member:nth-child(4) .social-icon:hover {
+            background: #9370DB;
+            transform: scale(1.1);
+        }
+        
+        .team-member:nth-child(5) .social-icon {
+            background: #2F4F4F;
+            color: white;
+        }
+        .team-member:nth-child(5) .social-icon:hover {
+            background: #20B2AA;
+            transform: scale(1.1);
+        }
+        
+        .team-member:nth-child(6) .social-icon {
+            background: #FF6F91;
+            color: white;
+        }
+        .team-member:nth-child(6) .social-icon:hover {
+            background: #1E90FF;
+            transform: scale(1.1);
+        }
+        
+        /* Technical Section */
+        .technical-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .technical-card {
+            background: var(--light);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .technical-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .technical-image {
+            height: 250px;
+            overflow: hidden;
+        }
+        
+        .technical-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .technical-card:hover .technical-image img {
+            transform: scale(1.05);
+        }
+        
+        .technical-info {
+            padding: 20px;
+        }
+        
+        .technical-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .technical-desc {
+            font-size: 14px;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .tech-specs {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .tech-specs ul {
+            padding-left: 20px;
+        }
+        
+        .tech-specs li {
+            margin-bottom: 5px;
+        }
+        
+        /* Contact Section */
+        .contact {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .contact-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .contact-email {
+            font-size: 18px;
+            color: var(--secondary);
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+        
+        .contact-social {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        
+        .social-link {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+        
+        .social-link:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 14px;
+            color: var(--dark);
+            opacity: 0.7;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px;
+            }
+            
+            .technical-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .member-photo-container {
+                height: 250px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                border-radius: 10px;
+            }
+            
+            .about-text {
+                font-size: 16px;
+            }
+            
+            .section-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="assets/img/logosubiot 1.jpg" alt="SUBIOT Logo">
+            </div>
+            <p class="about-text">
+                SUBIOT adalah gabungan semangat dan inovasi yang percaya bahwa teknologi bukan hanya untuk memudahkan, tetapi juga membawa perubahan positif. Kenali orang-orang yang bekerja keras untuk mewujudkan setiap ide dan solusi.
+            </p>
+        </div>
+        
+        <h2 class="section-title">Our Team</h2>
+        <div class="team-container">
+            <!-- Team Member 1 -->
+            <div class="team-member">
+                <div class="member-photo-container">
+                    <img class="member-photo" src="assets/img/Bapak 1.png" alt="IR.Kamarudin">
+                </div>
+                <div class="member-info">
+                    <h3 class="member-name">IR.Kamarudin, S.T, M.T. IPM</h3>
+                    <p class="member-role">CEO</p>
+                    <div class="member-social">
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Member 2 -->
+            <div class="team-member">
+                <div class="member-photo-container">
+                    <img class="member-photo" src="assets/img/dapong 1.png" alt="Giffari Daffa">
+                </div>
+                <div class="member-info">
+                    <h3 class="member-name">Giffari Daffa</h3>
+                    <p class="member-role">CTO</p>
+                    <div class="member-social">
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Member 3 -->
+            <div class="team-member">
+                <div class="member-photo-container">
+                    <img class="member-photo" src="assets/img/formal bipal 1.png" alt="Raja Bilival Haq">
+                </div>
+                <div class="member-info">
+                    <h3 class="member-name">Raja Bilival Haq</h3>
+                    <p class="member-role">COO</p>
+                    <div class="member-social">
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Member 4 -->
+            <div class="team-member">
+                <div class="member-photo-container">
+                    <img class="member-photo" src="assets/img/ipul serius 1.png" alt="Syaiful Habib">
+                </div>
+                <div class="member-info">
+                    <h3 class="member-name">Syaiful Habib</h3>
+                    <p class="member-role">Web Engineer</p>
+                    <div class="member-social">
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Member 5 -->
+            <div class="team-member">
+                <div class="member-photo-container">
+                    <img class="member-photo" src="assets/img/ibnu_formal-removebg-preview 1.png" alt="Muhammad Ibnu">
+                </div>
+                <div class="member-info">
+                    <h3 class="member-name">Muhammad Ibnu</h3>
+                    <p class="member-role">Programmer</p>
+                    <div class="member-social">
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Member 6 -->
+            <div class="team-member">
+                <div class="member-photo-container">
+                    <img class="member-photo" src="assets/img/candra formal formal 1.png" alt="Chandra Adiguna">
+                </div>
+                <div class="member-info">
+                    <h3 class="member-name">Chandra Adiguna</h3>
+                    <p class="member-role">Mechanical</p>
+                    <div class="member-social">
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Technical Section -->
+        <h2 class="section-title">Our Technology</h2>
+        <div class="technical-container">
+            <div class="technical-card">
+                <div class="technical-image">
+                    <img src="assets/img/wiring.PNG" alt="Rangkaian Wemos V1, PZEM004T dan Relay">
+                </div>
+                <div class="technical-info">
+                    <h3 class="technical-title">Electrical System</h3>
+                    <p class="technical-desc">
+                        Rangkaian elektronik cerdas kami menggunakan Wemos V1 sebagai controller utama, PZEM004T untuk monitoring daya listrik, dan relay sebagai switch kontrol.
+                    </p>
+                    <div class="tech-specs">
+                        <ul>
+                            <li>Wemos D1 Mini sebagai microcontroller</li>
+                            <li>PZEM004T untuk pengukuran tegangan, arus, dan daya</li>
+                            <li>Relay 5V 10A untuk kontrol perangkat</li>
+                            <li>HLK-PSM01 sebagai power supply AC-DC 5V</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="technical-card">
+                <div class="technical-image">
+                    <img src="assets/img/stopkontak.jpg" alt="Stop Kontak Mekanikal">
+                </div>
+                <div class="technical-info">
+                    <h3 class="technical-title">Mechanical Design</h3>
+                    <p class="technical-desc">
+                        Desain mekanikal stop kontak yang akan ditanam di dinding dengan material berkualitas tinggi. Dirancang untuk keamanan dan estetika, dengan kemudahan instalasi.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="technical-card">
+                <div class="technical-image">
+                    <img src="assets/img/pcb.jpg" alt="3D PCB Design">
+                </div>
+                <div class="technical-info">
+                    <h3 class="technical-title">PCB Design</h3>
+                    <p class="technical-desc">
+                        Desain PCB 3D yang mengintegrasikan semua komponen secara compact dan efisien. Dirancang untuk optimalisasi ruang dan performa termal.
+                    </p>
+                    <div class="tech-specs">
+                        <ul>
+                            <li>Desain 2 layer dengan routing optimal</li>
+                            <li>Komponen SMD untuk efisiensi ruang</li>
+                            <li>Termal management yang baik</li>
+                            <li>Kompatibel dengan housing mekanikal</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="contact">
+            <h3 class="contact-title">Contact Us</h3>
+            <p class="contact-email">info@subiot.tech</p>
+            <div class="contact-social">
+                <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            </div>
+            <p class="footer">© 2023 SUBIOT Team. All Rights Reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

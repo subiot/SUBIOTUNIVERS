@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Add Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <style>
+        /* Reset CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Background gradasi */
+        body {
+            background: linear-gradient(to bottom, #FFFACF, #CFE2F3);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* Layout utama */
+        .container {
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            flex: 1;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Ikon keluar */
+        .logout {
+            font-size: 24px;
+            cursor: pointer;
+            color: #555;
+            transition: all 0.3s ease;
+        }
+
+        .logout:hover {
+            color: #333;
+            transform: translateX(3px);
+        }
+
+        /* Profil */
+        .profile {
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .profile-picture {
+            position: relative;
+            display: inline-block;
+        }
+
+        .profile-picture img {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 5px solid white;
+            object-fit: cover;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .change-photo {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #4CAF50;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .change-photo:hover {
+            background: #3e8e41;
+            transform: scale(1.1);
+        }
+
+        .profile h2 {
+            margin: 15px 0 5px;
+            font-size: 24px;
+            color: #333;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .profile p {
+            font-size: 16px;
+            color: #666;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* Ikon edit */
+        .edit-icon {
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 8px;
+            color: #555;
+            transition: all 0.3s ease;
+        }
+
+        .edit-icon:hover {
+            color: #333;
+            transform: scale(1.1);
+        }
+
+        /* Section Power Usage */
+        .power-usage {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            margin: 30px 0;
+            gap: 15px;
+        }
+
+        .card {
+            background: #FFEB3B;
+            padding: 20px 15px;
+            border-radius: 12px;
+            text-align: center;
+            width: 30%;
+            min-width: 120px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .card h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* History */
+        .history {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            gap: 15px;
+        }
+
+        .history-card {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 20px 15px;
+            border-radius: 12px;
+            width: 45%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .history-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .history-card h3 {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .history-card p {
+            font-size: 22px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 30px;
+            font-size: 16px;
+            padding: 15px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .card, .history-card {
+                width: 100%;
+            }
+            
+            .power-usage, .history {
+                flex-direction: column;
+            }
+        }
+
+        /* Hidden file input */
+        .hidden-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Profile</h1>
+            <i class="fas fa-arrow-right logout" id="dashboard-btn" title="Go to Dashboard"></i>
+        </header>
+
+        <section class="profile">
+            <div class="profile-picture">
+                <img id="profile-image" src="assets/img/ibnu_formal-removebg-preview 1.png" alt="User Photo">
+                <div class="change-photo" id="change-photo-btn">
+                    <i class="fas fa-camera"></i>
+                    <input type="file" id="photo-upload" class="hidden-input" accept="image/*">
+                </div>
+            </div>
+            <h2>
+                <span id="user-name">Loading...</span>
+                <i class="fas fa-pencil-alt edit-icon" id="edit-name-btn" title="Edit Name"></i>
+            </h2>
+            <p>
+                NIM: <span id="user-id">Loading...</span>
+                <i class="fas fa-pencil-alt edit-icon" id="edit-id-btn" title="Edit ID"></i>
+            </p>
+        </section>
+
+        <section class="power-usage">
+            <div class="card">
+                <h3>Power Used</h3>
+                <p id="power-used">0 KWh</p>
+            </div>
+            <div class="card">
+                <h3>Current</h3>
+                <p id="current">0 A</p>
+            </div>
+            <div class="card">
+                <h3>Voltage</h3>
+                <p id="voltage">0 V</p>
+            </div>
+        </section>
+
+        <section class="history">
+            <div class="history-card">
+                <h3>Monthly Usage</h3>
+                <p id="monthly-usage">0 KWh</p>
+            </div>
+            <div class="history-card">
+                <h3>Yearly Usage</h3>
+                <p id="yearly-usage">0 KWh</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>Contact: <span id="user-contact">Loading...</span></p>
+        </footer>
+    </div>
+
+    <script src="profil.js"></script>
+</body>
+</html>

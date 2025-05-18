@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Penggunaan Listrik</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #CFE2F3, #FFFACF);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .back-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            order: 1;
+        }
+        
+        h1 {
+            color: var(--dark);
+            text-align: center;
+            margin-bottom: 0;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            order: 2;
+            flex: 1;
+            min-width: 100%;
+        }
+        
+        .dashboard {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .chart-container, .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            width: 100%;
+        }
+        
+        .chart-header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .chart-title {
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .chart-period {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        
+        .period-btn {
+            background: var(--light-gray);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        .period-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+            min-height: 250px;
+            max-height: 400px;
+        }
+        
+        .table-header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .table-title {
+            font-size: clamp(1.1rem, 3vw, 1.3rem);
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .export-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            width: fit-content;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
+            position: sticky;
+            top: 0;
+        }
+        
+        tr:nth-child(even) {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+        
+        tr:hover {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .hidden-row {
+            display: none;
+        }
+        
+        .show-more {
+            background: var(--light-gray);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 50px;
+            margin-top: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 0.9rem;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .summary-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .card-icon {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        .card-value {
+            font-size: clamp(1.3rem, 4vw, 1.8rem);
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+        
+        .card-label {
+            color: var(--gray);
+            font-size: 0.8rem;
+        }
+        
+        /* Responsive Breakpoints */
+        @media (min-width: 768px) {
+            .header {
+                flex-wrap: nowrap;
+            }
+            
+            h1 {
+                min-width: auto;
+                order: 1;
+                flex: none;
+                text-align: left;
+            }
+            
+            .back-button {
+                order: 0;
+            }
+            
+            .chart-header, .table-header {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+            }
+            
+            .chart-period {
+                overflow-x: visible;
+            }
+            
+            table {
+                font-size: 1rem;
+            }
+            
+            th, td {
+                padding: 15px 10px;
+            }
+            
+            .show-more {
+                width: fit-content;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+        
+        @media (min-width: 992px) {
+            .dashboard {
+                gap: 30px;
+            }
+            
+            .chart-container, .table-container {
+                padding: 25px;
+            }
+            
+            .summary-cards {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+            
+            .summary-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <button class="back-button" onclick="window.history.back()">
+            <i class="fas fa-arrow-left"></i>
+            Kembali
+        </button>
+        <h1>Riwayat Penggunaan Listrik</h1>
+    </div>
+
+    <div class="dashboard">
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="card-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="card-value">375 kWh</div>
+                <div class="card-label">Pemakaian Bulan Ini</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-icon">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <div class="card-value">Rp 560.000</div>
+                <div class="card-label">Biaya Bulan Ini</div>
+            </div>
+            <div class="summary-card">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="card-value">-12%</div>
+                <div class="card-label">Perubahan dari Bulan Lalu</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">Grafik Pemakaian Listrik</div>
+                <div class="chart-period">
+                    <button class="period-btn active">Bulanan</button>
+                    <button class="period-btn">Mingguan</button>
+                    <button class="period-btn">Harian</button>
+                    <button class="period-btn">Tahunan</button>
+                </div>
+            </div>
+            <canvas id="usageChart"></canvas>
+        </div>
+
+        <div class="table-container">
+            <div class="table-header">
+                <div class="table-title">Detail Pemakaian</div>
+                <button class="export-btn">
+                    <i class="fas fa-download"></i>
+                    Export Data
+                </button>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bulan</th>
+                            <th>kWh</th>
+                            <th>Biaya</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Jan 2024</td>
+                            <td>300 kWh</td>
+                            <td>Rp 450.000</td>
+                            <td><span class="status-badge paid">Lunas</span></td>
+                        </tr>
+                        <tr>
+                            <td>Feb 2024</td>
+                            <td>280 kWh</td>
+                            <td>Rp 420.000</td>
+                            <td><span class="status-badge paid">Lunas</span></td>
+                        </tr>
+                        <tr>
+                            <td>Mar 2024</td>
+                            <td>260 kWh</td>
+                            <td>Rp 400.000</td>
+                            <td><span class="status-badge paid">Lunas</span></td>
+                        </tr>
+                        <tr class="hidden-row">
+                            <td>Apr 2024</td>
+                            <td>250 kWh</td>
+                            <td>Rp 380.000</td>
+                            <td><span class="status-badge paid">Lunas</span></td>
+                        </tr>
+                        <tr class="hidden-row">
+                            <td>Mei 2024</td>
+                            <td>230 kWh</td>
+                            <td>Rp 350.000</td>
+                            <td><span class="status-badge pending">Proses</span></td>
+                        </tr>
+                        <tr class="hidden-row">
+                            <td>Jun 2024</td>
+                            <td>210 kWh</td>
+                            <td>Rp 320.000</td>
+                            <td><span class="status-badge pending">Proses</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="show-more" onclick="toggleRows()">
+                <i class="fas fa-chevron-down"></i>
+                Tampilkan Lebih Banyak
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data grafik
+        const labels = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+        const dataKwh = [300, 280, 260, 250, 230, 210, 240, 270, 290, 310, 300, 320];
+        const dataCost = [450, 420, 400, 380, 350, 320, 360, 410, 440, 470, 450, 480];
+
+        const ctx = document.getElementById("usageChart").getContext("2d");
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Pemakaian (kWh)",
+                        data: dataKwh,
+                        borderColor: "#4361ee",
+                        backgroundColor: "rgba(67, 97, 238, 0.1)",
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: "Biaya (Rp x1000)",
+                        data: dataCost,
+                        borderColor: "#4cc9f0",
+                        backgroundColor: "rgba(76, 201, 240, 0.1)",
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.datasetIndex === 1) {
+                                    label += 'Rp ' + context.raw + '.000';
+                                } else {
+                                    label += context.raw + ' kWh';
+                                }
+                                return label;
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'kWh'
+                        },
+                        grid: {
+                            drawOnChartArea: true,
+                        }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Biaya (Rp x1000)'
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        }
+                    }
+                }
+            }
+        });
+
+        function toggleRows() {
+            const hiddenRows = document.querySelectorAll(".hidden-row");
+            hiddenRows.forEach(row => {
+                row.style.display = (row.style.display === "table-row") ? "none" : "table-row";
+            });
+
+            const btn = document.querySelector(".show-more");
+            const icon = btn.querySelector("i");
+            
+            if (btn.textContent.includes("Tampilkan")) {
+                btn.innerHTML = '<i class="fas fa-chevron-up"></i> Sembunyikan';
+            } else {
+                btn.innerHTML = '<i class="fas fa-chevron-down"></i> Tampilkan Lebih Banyak';
+            }
+        }
+
+        // Period button functionality
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                // Here you would update the chart data based on selected period
+            });
+        });
+    </script>
+ <script src="history.js"></script>
+</body>
+</html>

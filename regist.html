@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Started</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: url('assets/img/Backgroundregist.png') no-repeat center center/cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            color: black;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .input-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .input-box input {
+            width: 100%;
+            padding: 12px 40px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: black;
+            font-size: 14px;
+        }
+
+        .input-box input::placeholder {
+            color: black;
+        }
+
+        .input-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: black;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            background: black;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Get Started</h1>
+        <p>Ready for Full Control? Sign Up Now!</p>
+
+        <div class="input-box">
+            <i class="fa fa-user"></i>
+            <input type="text" id="nameInput" placeholder="Your Name">
+        </div>
+        
+        <div class="input-box">
+            <i class="fa fa-id-card"></i>
+            <input type="text" id="nimInput" placeholder="NIM">
+        </div>
+        
+        <div class="input-box">
+            <i class="fa fa-phone"></i>
+            <input type="text" id="waInput" placeholder="No. WA">
+        </div>
+        
+        <div class="input-box">
+            <i class="fa fa-envelope"></i>
+            <input type="email" id="emailInput" placeholder="Your Email">
+        </div>
+        
+        <div class="input-box">
+            <i class="fa fa-key"></i>
+            <input type="password" id="passwordInput" placeholder="Password">
+        </div>
+        
+        <button class="btn">Let's Get Started</button>        
+    </div>
+
+    <script type="module" src="script.js"></script>
+
+
+</body>
+</html>
