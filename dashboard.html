@@ -261,6 +261,81 @@
             gap: 0.5rem;
         }
         
+        /* Online Users Section */
+        .online-users-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .online-users-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .online-users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .user-card:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .user-status {
+            font-size: 0.75rem;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+        
         .footer {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
@@ -276,13 +351,14 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .stat-card, .workshop-card {
+        .stat-card, .workshop-card, .online-users-container {
             animation: fadeIn 0.6s ease forwards;
         }
         
         .workshop-card:nth-child(1) { animation-delay: 0.1s; }
         .workshop-card:nth-child(2) { animation-delay: 0.2s; }
         .workshop-card:nth-child(3) { animation-delay: 0.3s; }
+        .online-users-container { animation-delay: 0.4s; }
         
         /* Responsive Design */
         @media (max-width: 1024px) {
@@ -322,6 +398,10 @@
                 max-width: 500px;
                 margin: 0 auto;
             }
+            
+            .online-users-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
         }
         
         @media (max-width: 480px) {
@@ -344,6 +424,10 @@
             .footer {
                 padding: 1rem;
                 font-size: 0.8rem;
+            }
+            
+            .online-users-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -418,7 +502,7 @@
             <div class="workshop-card" onclick="navigate('ws22.html')">
                 <img src="assets/img/ruang22 1.png" alt="Workshop 2.2" class="workshop-image">
                 <div class="workshop-info">
-                    <span class="workshop-status" style="background-color: var(--warning)">Maintenance</span>
+                    <span class="workshop-status">Active</span>
                     <h3 class="workshop-name">Workshop 2.2</h3>
                     <p class="workshop-desc">Secondary workshop with 10 devices</p>
                     <div class="workshop-details">
@@ -437,7 +521,7 @@
             <div class="workshop-card" onclick="navigate('ws24.html')">
                 <img src="assets/img/24room 1.png" alt="Workshop 2.4" class="workshop-image">
                 <div class="workshop-info">
-                    <span class="workshop-status">Active</span>
+                    <span class="workshop-status" style="background-color: var(--warning)">Maintenance</span>
                     <h3 class="workshop-name">Workshop 2.4</h3>
                     <p class="workshop-desc">Special projects workshop</p>
                     <div class="workshop-details">
@@ -453,21 +537,216 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Online Users Section -->
+        <div class="online-users-container">
+            <h3 class="online-users-title">
+                <i class="fas fa-users"></i>
+                Currently Online (27 Users)
+            </h3>
+            <div class="online-users-grid">
+                <div class="user-card">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Ahmad Fauzi</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            Workshop 2.3
+                        </span>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Dewi Lestari</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            Workshop 2.2
+                        </span>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Budi Santoso</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            Workshop 2.3
+                        </span>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <img src="https://randomuser.me/api/portraits/women/28.jpg" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Citra Ayu</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            Workshop 2.4
+                        </span>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Eko Prasetyo</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            Workshop 2.2
+                        </span>
+                    </div>
+                </div>
+                <div class="user-card">
+                    <img src="https://randomuser.me/api/portraits/women/63.jpg" alt="User" class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">Fitriani</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            Workshop 2.3
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="footer">
         &copy; 2025 Workshop Monitoring System | Developed by Muhammad Ibnu Akbar
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    
+    <!-- Main JavaScript -->
     <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBggVwDQP4V-ki7rXADksto5Jzd5tOoO_I",
+            authDomain: "subiot-univers.firebaseapp.com",
+            databaseURL: "https://subiot-univers-default-rtdb.firebaseio.com",
+            projectId: "subiot-univers",
+            storageBucket: "subiot-univers.appspot.com",
+            messagingSenderId: "116296674465",
+            appId: "1:116296674465:web:d62ad44a9dba75240dd4e0"
+        };
+        
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+        
+        console.log("Firebase initialized successfully");
+
+        // Navigation function
         function navigate(page) {
             window.location.href = page;
         }
+        
+        // Update user location in database
+        function updateUserLocation(location) {
+            const user = auth.currentUser;
+            if (user) {
+                const userRef = database.ref('onlineUsers/' + user.uid);
+                userRef.update({
+                    location: location,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    console.log("User location updated to:", location);
+                }).catch((error) => {
+                    console.error("Error updating location:", error);
+                });
+            }
+        }
+        
+        // Setup presence system for online status
+        function setupPresenceSystem(user) {
+            const userStatusRef = database.ref('status/' + user.uid);
+            const userOnlineRef = database.ref('onlineUsers/' + user.uid);
+            
+            // Set user status to online
+            userStatusRef.set({
+                online: true,
+                lastChanged: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                console.log("User status set to online");
+            });
+            
+            // Set user online data
+            userOnlineRef.set({
+                name: user.displayName || 'Anonymous',
+                avatar: user.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
+                location: 'Dashboard',
+                lastActive: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                console.log("User online data set");
+            });
+            
+            // Handle disconnect
+            userStatusRef.onDisconnect().set({
+                online: false,
+                lastChanged: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            userOnlineRef.onDisconnect().remove();
+            
+            console.log("Presence system setup complete");
+        }
+        
+        // When DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM fully loaded");
+            
+            // Add workshop IDs to cards
+            const cards = document.querySelectorAll('.workshop-card');
+            cards.forEach((card, index) => {
+                const workshopId = ['2.3', '2.2', '2.4'][index];
+                card.setAttribute('data-workshop-id', workshopId);
+                
+                card.addEventListener('click', function() {
+                    updateUserLocation('Workshop ' + workshopId);
+                });
+            });
+            
+            // Listen for auth state changes
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    console.log('User logged in:', user.uid);
+                    setupPresenceSystem(user);
+                    
+                    // Update UI with user data if needed
+                    if (user.displayName) {
+                        const profileName = document.querySelector('.profile-name');
+                        if (profileName) {
+                            profileName.textContent = user.displayName;
+                        }
+                    }
+                } else {
+                    console.log('User not logged in');
+                    // Redirect to login page if needed
+                    // window.location.href = 'login.html';
+                }
+            });
+            
+            // Load real-time data from Firebase
+            loadRealtimeData();
+        });
+        
+        // Function to load real-time data from Firebase
+        function loadRealtimeData() {
+            // Example: Listen for power usage changes
+            const powerUsageRef = database.ref('powerUsage');
+            powerUsageRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    console.log("Power usage data:", data);
+                    // Update UI with real data
+                    // document.querySelector('.power-usage .stat-value').textContent = data.today + " kWh";
+                }
+            });
+            
+            // You can add more real-time listeners here
+        }
     </script>
-    <!-- Add these in the <head> section or right before your closing </body> tag -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-     <script src="dashboard.js"></script>
 </body>
 </html>

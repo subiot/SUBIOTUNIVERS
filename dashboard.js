@@ -1,17 +1,17 @@
-// dashboard.js - Workshop Monitoring with Firebase Integration
+// Import Firebase modules
 import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
-import { getAuth } from 'firebase/auth';
-// Firebase Configuration (same as in profil.js)
+import { getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, update } from 'firebase/database';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBggVwDQP4V-ki7rXADksto5Jzd5tOoO_I",
     authDomain: "subiot-univers.firebaseapp.com",
     databaseURL: "https://subiot-univers-default-rtdb.firebaseio.com",
     projectId: "subiot-univers",
-    storageBucket: "subiot-univers.firebasestorage.app",
+    storageBucket: "subiot-univers.appspot.com",
     messagingSenderId: "116296674465",
-    appId: "1:116296674465:web:d62ad44a9dba75240dd4e0",
-    measurementId: "G-XSX0C22H90"
+    appId: "1:116296674465:web:d62ad44a9dba75240dd4e0"
 };
 
 // Initialize Firebase
@@ -20,123 +20,277 @@ const database = getDatabase(app);
 const auth = getAuth(app);
 
 // DOM Elements
-const profileName = document.querySelector('.profile-name');
-const profileNim = document.querySelector('.profile-nim');
-const profileImg = document.querySelector('.profile img');
-const powerUsageValue = document.querySelector('.power-usage .stat-value');
-const monthConsumptionValue = document.querySelector('.month-history .stat-value');
-const monthCostValue = document.querySelector('.month-cost .stat-value');
+const elements = {
+    profile: {
+        name: document.querySelector('.profile-name'),
+        nim: document.querySelector('.profile-nim'),
+        img: document.querySelector('.profile img')
+    },
+    stats: {
+        powerUsage: {
+            value: document.querySelector('.power-usage .stat-value'),
+            subtext: document.querySelector('.power-usage .stat-subtext')
+        },
+        monthHistory: {
+            value: document.querySelector('.month-history .stat-value'),
+            subtext: document.querySelector('.month-history .stat-subtext')
+        },
+        monthCost: {
+            value: document.querySelector('.month-cost .stat-value'),
+            subtext: document.querySelector('.month-cost .stat-subtext')
+        }
+    },
+    workshops: {
+        ws23: {
+            card: document.querySelector('.workshop-card:nth-child(1)'),
+            name: document.querySelector('.workshop-card:nth-child(1) .workshop-name'),
+            desc: document.querySelector('.workshop-card:nth-child(1) .workshop-desc'),
+            status: document.querySelector('.workshop-card:nth-child(1) .workshop-status'),
+            usage: document.querySelector('.workshop-card:nth-child(1) .workshop-details .detail-item:nth-child(1) span'),
+            people: document.querySelector('.workshop-card:nth-child(1) .workshop-details .detail-item:nth-child(2) span')
+        },
+        ws22: {
+            card: document.querySelector('.workshop-card:nth-child(2)'),
+            name: document.querySelector('.workshop-card:nth-child(2) .workshop-name'),
+            desc: document.querySelector('.workshop-card:nth-child(2) .workshop-desc'),
+            status: document.querySelector('.workshop-card:nth-child(2) .workshop-status'),
+            usage: document.querySelector('.workshop-card:nth-child(2) .workshop-details .detail-item:nth-child(1) span'),
+            people: document.querySelector('.workshop-card:nth-child(2) .workshop-details .detail-item:nth-child(2) span')
+        },
+        ws24: {
+            card: document.querySelector('.workshop-card:nth-child(3)'),
+            name: document.querySelector('.workshop-card:nth-child(3) .workshop-name'),
+            desc: document.querySelector('.workshop-card:nth-child(3) .workshop-desc'),
+            status: document.querySelector('.workshop-card:nth-child(3) .workshop-status'),
+            usage: document.querySelector('.workshop-card:nth-child(3) .workshop-details .detail-item:nth-child(1) span'),
+            people: document.querySelector('.workshop-card:nth-child(3) .workshop-details .detail-item:nth-child(2) span')
+        }
+    },
+    onlineUsers: {
+        title: document.querySelector('.online-users-title'),
+        grid: document.querySelector('.online-users-grid')
+    }
+};
 
-// Workshop elements
-const workshop23Usage = document.querySelector('.workshop-card:nth-child(1) .detail-item:nth-child(1) span');
-const workshop23People = document.querySelector('.workshop-card:nth-child(1) .detail-item:nth-child(2) span');
-const workshop22Usage = document.querySelector('.workshop-card:nth-child(2) .detail-item:nth-child(1) span');
-const workshop22People = document.querySelector('.workshop-card:nth-child(2) .detail-item:nth-child(2) span');
-const workshop24Usage = document.querySelector('.workshop-card:nth-child(3) .detail-item:nth-child(1) span');
-const workshop24People = document.querySelector('.workshop-card:nth-child(3) .detail-item:nth-child(2) span');
-
-// Current user ID
-let currentUserId = null;
+// Global variables
+let currentUser = null;
 
 // Initialize the application
 function initApp() {
-    auth.onAuthStateChanged(user => {
+    // Check auth state
+    onAuthStateChanged(auth, (user) => {
         if (user) {
-            currentUserId = user.uid;
+            currentUser = user;
+            setupEventListeners();
             loadUserProfile();
             setupRealtimeData();
+            setupPresenceSystem();
         } else {
-            // Redirect to login if not authenticated
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
     });
 }
 
-// Load user profile from Firebase
+// Setup event listeners
+function setupEventListeners() {
+    // Profile click handler
+    document.querySelector('.profile').addEventListener('click', () => {
+        navigate('profile.html');
+    });
+
+    // Workshop card click handlers
+    Object.values(elements.workshops).forEach(workshop => {
+        if (workshop.card) {
+            workshop.card.addEventListener('click', () => {
+                const workshopId = workshop.card.getAttribute('data-workshop-id') || 
+                                 workshop.card.id.replace('ws', '').replace('-', '.');
+                updateUserLocation(`Workshop ${workshopId}`);
+                navigate(`ws${workshopId.replace('.', '')}.html`);
+            });
+        }
+    });
+}
+
+// Load user profile
 function loadUserProfile() {
-    const userRef = database.ref('users/' + currentUserId);
+    const userRef = ref(database, `users/${currentUser.uid}`);
     
-    userRef.on('value', (snapshot) => {
+    onValue(userRef, (snapshot) => {
         const userData = snapshot.val();
         if (userData) {
-            profileName.textContent = userData.name || 'Nama Pengguna';
-            profileNim.textContent = `NIM: ${userData.nim || '0000000000'}`;
+            elements.profile.name.textContent = userData.name || currentUser.displayName || 'User';
+            elements.profile.nim.textContent = `NIM: ${userData.nim || 'N/A'}`;
             
+            // Set profile image
             if (userData.profileImage) {
-                profileImg.src = userData.profileImage;
+                elements.profile.img.src = userData.profileImage;
+            } else if (currentUser.photoURL) {
+                elements.profile.img.src = currentUser.photoURL;
             } else {
-                profileImg.src = 'assets/img/ibnu_formal-removebg-preview 1.png';
+                elements.profile.img.src = 'assets/img/default-profile.png';
             }
         }
+    }, {
+        onlyOnce: true
     });
 }
 
-// Setup realtime data listeners for energy monitoring
+// Setup realtime data listeners
 function setupRealtimeData() {
-    // Power Usage Data
-    const powerRef = database.ref('powerUsage/' + currentUserId);
-    
-    powerRef.on('value', (snapshot) => {
-        const powerData = snapshot.val();
-        if (powerData) {
-            // Update dashboard stats
-            powerUsageValue.textContent = `${(powerData.powerUsed || 0).toFixed(1)} kWh`;
+    // Power usage data
+    const powerRef = ref(database, 'powerUsage');
+    onValue(powerRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // Today's power usage
+            const todayUsage = data.today || 0;
+            elements.stats.powerUsage.value.textContent = `${todayUsage.toFixed(1)} kWh`;
             
-            // Calculate monthly consumption (assuming 30 days)
-            const monthly = (powerData.powerUsed || 0) * 30;
-            monthConsumptionValue.textContent = `${monthly.toFixed(0)} kWh`;
+            // Change from yesterday
+            const change = data.changeFromYesterday || 0;
+            elements.stats.powerUsage.subtext.textContent = 
+                `${change >= 0 ? '+' : ''}${change}% from yesterday`;
             
-            // Calculate monthly cost (Rp 1,500 per kWh)
-            const cost = monthly * 1500;
-            monthCostValue.textContent = `Rp ${formatNumber(cost.toFixed(0))}`;
+            // Monthly consumption
+            const monthlyConsumption = data.monthly || 0;
+            elements.stats.monthHistory.value.textContent = `${monthlyConsumption} kWh`;
+            
+            // Monthly cost
+            const monthlyCost = data.cost || 0;
+            elements.stats.monthCost.value.textContent = `Rp ${formatNumber(monthlyCost)}`;
+            elements.stats.monthCost.subtext.textContent = 
+                `Estimated savings: Rp ${formatNumber(data.estimatedSavings || 0)}`;
         }
     });
 
-    // Workshop Data
-    const workshopRef = database.ref('workshops/' + currentUserId);
-    
-    workshopRef.on('value', (snapshot) => {
-        const workshopData = snapshot.val();
-        if (workshopData) {
-            // Update workshop 2.3
-            if (workshopData.ws23) {
-                workshop23Usage.textContent = `${(workshopData.ws23.usage || 0).toFixed(1)} kWh today`;
-                workshop23People.textContent = `${workshopData.ws23.people || 0} people`;
-            }
-            
-            // Update workshop 2.2
-            if (workshopData.ws22) {
-                workshop22Usage.textContent = `${(workshopData.ws22.usage || 0).toFixed(1)} kWh today`;
-                workshop22People.textContent = `${workshopData.ws22.people || 0} people`;
-                
-                // Update status based on maintenance flag
-                const statusElement = document.querySelector('.workshop-card:nth-child(2) .workshop-status');
-                if (workshopData.ws22.maintenance) {
-                    statusElement.textContent = 'Maintenance';
-                    statusElement.style.backgroundColor = 'var(--warning)';
-                } else {
-                    statusElement.textContent = 'Active';
-                    statusElement.style.backgroundColor = 'var(--success)';
-                }
-            }
-            
-            // Update workshop 2.4
-            if (workshopData.ws24) {
-                workshop24Usage.textContent = `${(workshopData.ws24.usage || 0).toFixed(1)} kWh today`;
-                workshop24People.textContent = `${workshopData.ws24.people || 0} people`;
-            }
+    // Workshop data
+    const workshopsRef = ref(database, 'workshops');
+    onValue(workshopsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // Update each workshop
+            updateWorkshop('2.2', data['2.2']);
+            updateWorkshop('2.3', data['2.3']);
+            updateWorkshop('2.4', data['2.4']);
         }
     });
 
-    // History Data (for more detailed analytics if needed)
-    const historyRef = database.ref('usageHistory/' + currentUserId);
-    historyRef.on('value', (snapshot) => {
-        const historyData = snapshot.val();
-        // Could use this for more detailed reporting
+    // Online users
+    const onlineUsersRef = ref(database, 'onlineUsers');
+    onValue(onlineUsersRef, (snapshot) => {
+        updateOnlineUsersList(snapshot.val());
     });
 }
 
-// Format number with commas
+// Update workshop information
+function updateWorkshop(workshopId, data) {
+    if (!data) return;
+    
+    const workshopKey = `ws${workshopId.replace('.', '')}`;
+    const workshop = elements.workshops[workshopKey];
+    
+    if (!workshop) return;
+    
+    // Update basic info
+    if (workshop.name) workshop.name.textContent = `Workshop ${workshopId}`;
+    if (workshop.desc) workshop.desc.textContent = data.description || `${data.deviceCount || 0} active devices`;
+    
+    // Update status
+    if (workshop.status) {
+        workshop.status.textContent = data.status || 'Active';
+        workshop.status.style.backgroundColor = 
+            data.status === 'Maintenance' ? 'var(--warning)' : 
+            data.status === 'Inactive' ? 'var(--gray)' : 'var(--success)';
+    }
+    
+    // Update usage and people
+    if (workshop.usage) workshop.usage.textContent = `${(data.powerUsage || 0).toFixed(1)} kWh today`;
+    if (workshop.people) workshop.people.textContent = `${data.userCount || 0} people`;
+}
+
+// Update online users list
+function updateOnlineUsersList(users) {
+    if (!elements.onlineUsers.grid) return;
+    
+    elements.onlineUsers.grid.innerHTML = '';
+    
+    if (!users) {
+        elements.onlineUsers.title.innerHTML = `<i class="fas fa-users"></i> Currently Online (0 Users)`;
+        elements.onlineUsers.grid.innerHTML = '<p>No users currently online</p>';
+        return;
+    }
+    
+    const userCount = Object.keys(users).length;
+    elements.onlineUsers.title.innerHTML = `<i class="fas fa-users"></i> Currently Online (${userCount} Users)`;
+    
+    Object.entries(users).forEach(([userId, user]) => {
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card';
+        userCard.innerHTML = `
+            <img src="${user.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg'}" 
+                 alt="${user.name}" 
+                 class="user-avatar">
+            <div class="user-info">
+                <span class="user-name">${user.name || 'Anonymous'}</span>
+                <span class="user-status">
+                    <span class="status-indicator"></span>
+                    ${user.location || 'Dashboard'}
+                </span>
+            </div>
+        `;
+        elements.onlineUsers.grid.appendChild(userCard);
+    });
+}
+
+// Setup presence system
+function setupPresenceSystem() {
+    if (!currentUser) return;
+    
+    const userStatusRef = ref(database, `status/${currentUser.uid}`);
+    const userOnlineRef = ref(database, `onlineUsers/${currentUser.uid}`);
+    
+    // Get user data
+    const userRef = ref(database, `users/${currentUser.uid}`);
+    onValue(userRef, (snapshot) => {
+        const userData = snapshot.val();
+        
+        // Set initial status
+        set(userStatusRef, {
+            online: true,
+            lastChanged: serverTimestamp()
+        });
+        
+        // Set online user data
+        set(userOnlineRef, {
+            name: userData?.name || currentUser.displayName || 'User',
+            avatar: userData?.profileImage || currentUser.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
+            location: 'Dashboard',
+            lastActive: serverTimestamp(),
+            nim: userData?.nim || 'N/A'
+        });
+        
+        // Setup disconnect handlers
+        onDisconnect(userStatusRef).set({
+            online: false,
+            lastChanged: serverTimestamp()
+        });
+        
+        onDisconnect(userOnlineRef).remove();
+    }, { onlyOnce: true });
+}
+
+// Update user location
+function updateUserLocation(location) {
+    if (!currentUser) return;
+    
+    const userOnlineRef = ref(database, `onlineUsers/${currentUser.uid}`);
+    update(userOnlineRef, {
+        location: location,
+        lastActive: serverTimestamp()
+    });
+}
+
+// Helper function to format numbers
 function formatNumber(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
@@ -146,5 +300,5 @@ function navigate(page) {
     window.location.href = page;
 }
 
-// Initialize the app when DOM is loaded
+// Initialize the app when DOM is ready
 document.addEventListener('DOMContentLoaded', initApp);

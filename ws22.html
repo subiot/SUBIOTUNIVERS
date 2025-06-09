@@ -505,11 +505,11 @@
         </div>
 
         <!-- App Header -->
+        <!-- App Header -->
         <header class="app-header">
-            <button class="back-btn" onclick="goBack()">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            
+        <button class="back-btn" onclick="goToDashboard()">
+        <i class="fas fa-arrow-left"></i>
+         </button>
             <div class="header-title">
                 <h1>WORKSHOP 2.2 CONTROL PANEL</h1>
                 <p>Smart Device Management System</p>
@@ -846,6 +846,10 @@
             window.location.href = "profile.html";
         }
 
+        function goToDashboard() {
+        window.location.href = "dashboard.html";
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             updateTime();
@@ -861,6 +865,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <!-- Then your ws22.js -->
-<script src="ws22.js"></script>
+<script type="module" src="ws22.js"></script>
+<script type="module" src="konfigurasi.js"></script>
 </body>
 </html>
