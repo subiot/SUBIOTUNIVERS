@@ -284,7 +284,7 @@
         
         .online-users-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 1rem;
         }
         
@@ -307,18 +307,28 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--accent);
+            background-color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
         }
         
         .user-info {
             display: flex;
             flex-direction: column;
+            flex-grow: 1;
         }
         
         .user-name {
             font-weight: 500;
             font-size: 0.9rem;
+        }
+        
+        .user-nim {
+            font-size: 0.75rem;
+            color: var(--gray);
         }
         
         .user-status {
@@ -400,7 +410,7 @@
             }
             
             .online-users-grid {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             }
         }
         
@@ -431,6 +441,10 @@
             }
         }
     </style>
+    <!-- Firebase SDKs (only include these once) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -439,8 +453,8 @@
         <div class="profile" onclick="navigate('profil.html')">
             <img src="assets/img/ibnu_formal-removebg-preview 1.png" alt="Profile">
             <div class="profile-info">
-                <span class="profile-name">Muhammad Ibnu Akbar</span>
-                <span class="profile-nim">NIM: 3232401064</span>
+                <span class="profile-name">Loading...</span>
+                <span class="profile-nim">NIM: Loading...</span>
             </div>
         </div>
     </div>
@@ -454,8 +468,8 @@
                     <i class="fas fa-bolt stat-icon"></i>
                     Power Usage Today
                 </div>
-                <div class="stat-value">12.5 kWh</div>
-                <div class="stat-subtext">+2.1% from yesterday</div>
+                <div class="stat-value">0 kWh</div>
+                <div class="stat-subtext">Loading data...</div>
             </div>
             
             <div class="stat-card month-history" onclick="navigate('history.html')">
@@ -463,7 +477,7 @@
                     <i class="fas fa-chart-line stat-icon"></i>
                     Monthly Consumption
                 </div>
-                <div class="stat-value">375 kWh</div>
+                <div class="stat-value">0 kWh</div>
                 <div class="stat-subtext">View full history →</div>
             </div>
             
@@ -472,8 +486,8 @@
                     <i class="fas fa-money-bill-wave stat-icon"></i>
                     Monthly Cost
                 </div>
-                <div class="stat-value">Rp 560,000</div>
-                <div class="stat-subtext">Estimated savings: Rp 120,000</div>
+                <div class="stat-value">Rp 0</div>
+                <div class="stat-subtext">Loading data...</div>
             </div>
         </div>
         
@@ -485,15 +499,15 @@
                 <div class="workshop-info">
                     <span class="workshop-status">Active</span>
                     <h3 class="workshop-name">Workshop 2.3</h3>
-                    <p class="workshop-desc">Main workshop with 15 active devices</p>
+                    <p class="workshop-desc">Main workshop with active devices</p>
                     <div class="workshop-details">
                         <div class="detail-item">
                             <i class="fas fa-plug"></i>
-                            <span>8.2 kWh today</span>
+                            <span>0 kWh today</span>
                         </div>
                         <div class="detail-item">
                             <i class="fas fa-users"></i>
-                            <span>12 people</span>
+                            <span>0 people</span>
                         </div>
                     </div>
                 </div>
@@ -504,15 +518,15 @@
                 <div class="workshop-info">
                     <span class="workshop-status">Active</span>
                     <h3 class="workshop-name">Workshop 2.2</h3>
-                    <p class="workshop-desc">Secondary workshop with 10 devices</p>
+                    <p class="workshop-desc">Secondary workshop with devices</p>
                     <div class="workshop-details">
                         <div class="detail-item">
                             <i class="fas fa-plug"></i>
-                            <span>3.1 kWh today</span>
+                            <span>0 kWh today</span>
                         </div>
                         <div class="detail-item">
                             <i class="fas fa-users"></i>
-                            <span>6 people</span>
+                            <span>0 people</span>
                         </div>
                     </div>
                 </div>
@@ -527,84 +541,24 @@
                     <div class="workshop-details">
                         <div class="detail-item">
                             <i class="fas fa-plug"></i>
-                            <span>5.7 kWh today</span>
+                            <span>0 kWh today</span>
                         </div>
                         <div class="detail-item">
                             <i class="fas fa-users"></i>
-                            <span>9 people</span>
+                            <span>0 people</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Online Users Section -->
         <div class="online-users-container">
             <h3 class="online-users-title">
                 <i class="fas fa-users"></i>
-                Currently Online (27 Users)
+                Currently Online (<span id="online-count">0</span> Users)
             </h3>
-            <div class="online-users-grid">
-                <div class="user-card">
-                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Ahmad Fauzi</span>
-                        <span class="user-status">
-                            <span class="status-indicator"></span>
-                            Workshop 2.3
-                        </span>
-                    </div>
-                </div>
-                <div class="user-card">
-                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Dewi Lestari</span>
-                        <span class="user-status">
-                            <span class="status-indicator"></span>
-                            Workshop 2.2
-                        </span>
-                    </div>
-                </div>
-                <div class="user-card">
-                    <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="User" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Budi Santoso</span>
-                        <span class="user-status">
-                            <span class="status-indicator"></span>
-                            Workshop 2.3
-                        </span>
-                    </div>
-                </div>
-                <div class="user-card">
-                    <img src="https://randomuser.me/api/portraits/women/28.jpg" alt="User" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Citra Ayu</span>
-                        <span class="user-status">
-                            <span class="status-indicator"></span>
-                            Workshop 2.4
-                        </span>
-                    </div>
-                </div>
-                <div class="user-card">
-                    <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="User" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Eko Prasetyo</span>
-                        <span class="user-status">
-                            <span class="status-indicator"></span>
-                            Workshop 2.2
-                        </span>
-                    </div>
-                </div>
-                <div class="user-card">
-                    <img src="https://randomuser.me/api/portraits/women/63.jpg" alt="User" class="user-avatar">
-                    <div class="user-info">
-                        <span class="user-name">Fitriani</span>
-                        <span class="user-status">
-                            <span class="status-indicator"></span>
-                            Workshop 2.3
-                        </span>
-                    </div>
-                </div>
+            <div class="online-users-grid" id="online-users-list">
+                <!-- User cards will be added dynamically -->
             </div>
         </div>
     </div>
@@ -613,11 +567,6 @@
         &copy; 2025 Workshop Monitoring System | Developed by Muhammad Ibnu Akbar
     </div>
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    
     <!-- Main JavaScript -->
     <script>
         // Initialize Firebase
@@ -631,16 +580,32 @@
             appId: "1:116296674465:web:d62ad44a9dba75240dd4e0"
         };
         
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
+        // Initialize Firebase only if not already initialized
+        if (!firebase.apps.length) {
+            const app = firebase.initializeApp(firebaseConfig);
+            console.log("Firebase initialized successfully");
+        } else {
+            const app = firebase.app();
+            console.log("Using existing Firebase app");
+        }
+        
         const database = firebase.database();
         const auth = firebase.auth();
         
-        console.log("Firebase initialized successfully");
+        console.log("Firebase services initialized");
 
-        // Navigation function
+        // Navigation function with location update
         function navigate(page) {
-            window.location.href = page;
+            let location = 'Dashboard';
+            if (page.includes('ws23')) location = 'Workshop 2.3';
+            if (page.includes('ws22')) location = 'Workshop 2.2';
+            if (page.includes('ws24')) location = 'Workshop 2.4';
+            if (page.includes('history')) location = 'History Page';
+            if (page.includes('profil')) location = 'Profile Page';
+            
+            updateUserLocation(location).then(() => {
+                window.location.href = page;
+            });
         }
         
         // Update user location in database
@@ -648,7 +613,7 @@
             const user = auth.currentUser;
             if (user) {
                 const userRef = database.ref('onlineUsers/' + user.uid);
-                userRef.update({
+                return userRef.update({
                     location: location,
                     lastActive: firebase.database.ServerValue.TIMESTAMP
                 }).then(() => {
@@ -657,6 +622,7 @@
                     console.error("Error updating location:", error);
                 });
             }
+            return Promise.resolve();
         }
         
         // Setup presence system for online status
@@ -664,33 +630,113 @@
             const userStatusRef = database.ref('status/' + user.uid);
             const userOnlineRef = database.ref('onlineUsers/' + user.uid);
             
-            // Set user status to online
-            userStatusRef.set({
-                online: true,
-                lastChanged: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                console.log("User status set to online");
+            // Get user data from database
+            database.ref('users/' + user.uid).once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                
+                // Set user status to online
+                userStatusRef.set({
+                    online: true,
+                    lastChanged: firebase.database.ServerValue.TIMESTAMP
+                }).then(() => {
+                    console.log("User status set to online");
+                });
+                
+                // Set user online data
+                userOnlineRef.set({
+                    name: userData.name || 'Anonymous',
+                    nim: userData.nim || 'N/A',
+                    location: 'Dashboard',
+                    lastActive: firebase.database.ServerValue.TIMESTAMP,
+                    avatar: userData.profileImage || 'https://randomuser.me/api/portraits/lego/1.jpg'
+                }).then(() => {
+                    console.log("User online data set");
+                    
+                    // Update profile info in header
+                    updateProfileInfo(userData);
+                });
+                
+                // Handle disconnect - only update status, don't remove
+                userStatusRef.onDisconnect().set({
+                    online: false,
+                    lastChanged: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // Don't remove on disconnect - just update lastActive
+                userOnlineRef.onDisconnect().update({
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                console.log("Presence system setup complete");
+            });
+        }
+        
+        // Update profile information in header
+        function updateProfileInfo(userData) {
+            const profileName = document.querySelector('.profile-name');
+            const profileNim = document.querySelector('.profile-nim');
+            const profileImg = document.querySelector('.profile img');
+            
+            if (profileName && profileNim) {
+                profileName.textContent = userData.name || 'Anonymous';
+                profileNim.textContent = 'NIM: ' + (userData.nim || 'N/A');
+            }
+            
+            if (profileImg && userData.profileImage) {
+                profileImg.src = userData.profileImage;
+            }
+        }
+        
+        // Render online users list
+        function renderOnlineUsers(users) {
+            const onlineUsersList = document.getElementById('online-users-list');
+            const onlineCount = document.getElementById('online-count');
+            
+            if (!users || Object.keys(users).length === 0) {
+                onlineUsersList.innerHTML = '<div class="empty-state">No users currently online</div>';
+                onlineCount.textContent = '0';
+                return;
+            }
+            
+            // Filter out users who haven't been active in the last 5 minutes
+            const now = Date.now();
+            const activeUsers = Object.entries(users).filter(([userId, userData]) => {
+                return now - userData.lastActive < 300000; // 5 minutes in milliseconds
             });
             
-            // Set user online data
-            userOnlineRef.set({
-                name: user.displayName || 'Anonymous',
-                avatar: user.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
-                location: 'Dashboard',
-                lastActive: firebase.database.ServerValue.TIMESTAMP
-            }).then(() => {
-                console.log("User online data set");
+            onlineCount.textContent = activeUsers.length;
+            onlineUsersList.innerHTML = '';
+            
+            activeUsers.forEach(([userId, userData]) => {
+                const userCard = document.createElement('div');
+                userCard.className = 'user-card';
+                userCard.innerHTML = `
+                    <img src="${userData.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg'}" 
+                         alt="${userData.name}" 
+                         class="user-avatar">
+                    <div class="user-info">
+                        <span class="user-name">${userData.name || 'Anonymous'}</span>
+                        <span class="user-nim">${userData.nim || 'N/A'}</span>
+                        <span class="user-status">
+                            <span class="status-indicator"></span>
+                            ${userData.location || 'Dashboard'}
+                        </span>
+                    </div>
+                `;
+                
+                onlineUsersList.appendChild(userCard);
             });
-            
-            // Handle disconnect
-            userStatusRef.onDisconnect().set({
-                online: false,
-                lastChanged: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            userOnlineRef.onDisconnect().remove();
-            
-            console.log("Presence system setup complete");
+        }
+        
+        // Calculate monthly cost based on kWh
+        function calculateMonthlyCost(kWh) {
+            const ratePerKWh = 1300; // Rp 1300 per kWh
+            return kWh * ratePerKWh;
+        }
+        
+        // Format currency in Indonesian Rupiah
+        function formatRupiah(amount) {
+            return 'Rp ' + amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
         }
         
         // When DOM is loaded
@@ -702,10 +748,6 @@
             cards.forEach((card, index) => {
                 const workshopId = ['2.3', '2.2', '2.4'][index];
                 card.setAttribute('data-workshop-id', workshopId);
-                
-                card.addEventListener('click', function() {
-                    updateUserLocation('Workshop ' + workshopId);
-                });
             });
             
             // Listen for auth state changes
@@ -713,39 +755,94 @@
                 if (user) {
                     console.log('User logged in:', user.uid);
                     setupPresenceSystem(user);
-                    
-                    // Update UI with user data if needed
-                    if (user.displayName) {
-                        const profileName = document.querySelector('.profile-name');
-                        if (profileName) {
-                            profileName.textContent = user.displayName;
-                        }
-                    }
+                    loadRealtimeData();
                 } else {
                     console.log('User not logged in');
-                    // Redirect to login page if needed
-                    // window.location.href = 'login.html';
+                    window.location.href = 'login.html';
                 }
             });
             
-            // Load real-time data from Firebase
-            loadRealtimeData();
+            // Listen for online users changes
+            database.ref('onlineUsers').on('value', (snapshot) => {
+                renderOnlineUsers(snapshot.val());
+            });
         });
         
         // Function to load real-time data from Firebase
         function loadRealtimeData() {
-            // Example: Listen for power usage changes
+            // Listen for power usage changes
             const powerUsageRef = database.ref('powerUsage');
             powerUsageRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
                     console.log("Power usage data:", data);
-                    // Update UI with real data
-                    // document.querySelector('.power-usage .stat-value').textContent = data.today + " kWh";
+                    
+                    // Update today's power usage
+                    if (data.today) {
+                        document.querySelector('.power-usage .stat-value').textContent = data.today.toFixed(1) + " kWh";
+                        document.querySelector('.power-usage .stat-subtext').textContent = 
+                            data.changeFromYesterday >= 0 ? `+${data.changeFromYesterday}% from yesterday` : `${data.changeFromYesterday}% from yesterday`;
+                    }
+                    
+                    // Update monthly consumption
+                    if (data.monthly) {
+                        const monthlyKWh = data.monthly;
+                        document.querySelector('.month-history .stat-value').textContent = monthlyKWh + " kWh";
+                        
+                        // Calculate and update monthly cost
+                        const monthlyCost = calculateMonthlyCost(monthlyKWh);
+                        document.querySelector('.month-cost .stat-value').textContent = formatRupiah(monthlyCost);
+                        
+                        // Calculate estimated savings (example: 20% savings potential)
+                        const estimatedSavings = monthlyCost * 0.2;
+                        document.querySelector('.month-cost .stat-subtext').textContent = 
+                            `Estimated savings: ${formatRupiah(estimatedSavings)}`;
+                    }
                 }
             });
             
-            // You can add more real-time listeners here
+            // Listen for workshop data
+            database.ref('workshops').on('value', (snapshot) => {
+                const workshops = snapshot.val();
+                if (workshops) {
+                    console.log("Workshop data:", workshops);
+                    
+                    // Update workshop cards
+                    document.querySelectorAll('.workshop-card').forEach(card => {
+                        const workshopId = card.getAttribute('data-workshop-id');
+                        const workshopData = workshops[workshopId];
+                        
+                        if (workshopData) {
+                            // Update power usage
+                            const powerElement = card.querySelector('.detail-item:nth-child(1) span');
+                            if (powerElement && workshopData.powerUsage) {
+                                powerElement.textContent = workshopData.powerUsage.toFixed(1) + " kWh today";
+                            }
+                            
+                            // Update people count
+                            const peopleElement = card.querySelector('.detail-item:nth-child(2) span');
+                            if (peopleElement && workshopData.userCount) {
+                                peopleElement.textContent = workshopData.userCount + " people";
+                            }
+                            
+                            // Update status
+                            const statusElement = card.querySelector('.workshop-status');
+                            if (statusElement) {
+                                if (workshopData.status === 'Maintenance') {
+                                    statusElement.textContent = 'Maintenance';
+                                    statusElement.style.backgroundColor = 'var(--warning)';
+                                } else if (workshopData.status === 'Active') {
+                                    statusElement.textContent = 'Active';
+                                    statusElement.style.backgroundColor = 'var(--success)';
+                                } else if (workshopData.status === 'Inactive') {
+                                    statusElement.textContent = 'Inactive';
+                                    statusElement.style.backgroundColor = 'var(--gray)';
+                                }
+                            }
+                        }
+                    });
+                }
+            });
         }
     </script>
 </body>

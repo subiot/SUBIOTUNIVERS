@@ -1,5 +1,7 @@
-// Import Firebase modules
-import { initializeApp } from 'firebase/app';
+// Choose ONE of these import methods - don't use both
+
+// OPTION 1: Modern modular SDK (recommended)
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getDatabase, ref, onValue, set, onDisconnect, serverTimestamp, update } from 'firebase/database';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
@@ -14,8 +16,14 @@ const firebaseConfig = {
     appId: "1:116296674465:web:d62ad44a9dba75240dd4e0"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only if it hasn't been initialized already
+let app;
+if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApp();
+}
+
 const database = getDatabase(app);
 const auth = getAuth(app);
 
@@ -85,28 +93,59 @@ function initApp() {
             loadUserProfile();
             setupRealtimeData();
             setupPresenceSystem();
+            updatePageLocation();
         } else {
             window.location.href = 'index.html';
         }
     });
 }
 
+// Function to determine and update current page location
+function updatePageLocation() {
+    const path = window.location.pathname;
+    let location = 'Dashboard';
+    
+    if (path.includes('ws22.html')) {
+        location = 'Workshop 2.2';
+    } else if (path.includes('ws23.html')) {
+        location = 'Workshop 2.3';
+    } else if (path.includes('ws24.html')) {
+        location = 'Workshop 2.4';
+    } else if (path.includes('history.html')) {
+        location = 'History Page';
+    } else if (path.includes('profile.html')) {
+        location = 'Profile Page';
+    }
+    
+    updateUserLocation(location);
+}
+
 // Setup event listeners
 function setupEventListeners() {
     // Profile click handler
-    document.querySelector('.profile').addEventListener('click', () => {
-        navigate('profile.html');
+    document.querySelector('.profile')?.addEventListener('click', () => {
+        updateUserLocation('Profile Page');
+        setTimeout(() => navigate('profile.html'), 200);
     });
 
     // Workshop card click handlers
-    Object.values(elements.workshops).forEach(workshop => {
+    Object.entries(elements.workshops).forEach(([key, workshop]) => {
         if (workshop.card) {
+            const workshopId = key.replace('ws', '').replace('2', '2.');
+            workshop.card.setAttribute('data-workshop-id', workshopId);
+            
             workshop.card.addEventListener('click', () => {
-                const workshopId = workshop.card.getAttribute('data-workshop-id') || 
-                                 workshop.card.id.replace('ws', '').replace('-', '.');
+                const workshopId = workshop.card.getAttribute('data-workshop-id');
                 updateUserLocation(`Workshop ${workshopId}`);
-                navigate(`ws${workshopId.replace('.', '')}.html`);
+                setTimeout(() => navigate(`ws${workshopId.replace('.', '')}.html`), 200);
             });
+        }
+    });
+
+    // Handle page visibility changes
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            updatePageLocation();
         }
     });
 }
@@ -121,7 +160,6 @@ function loadUserProfile() {
             elements.profile.name.textContent = userData.name || currentUser.displayName || 'User';
             elements.profile.nim.textContent = `NIM: ${userData.nim || 'N/A'}`;
             
-            // Set profile image
             if (userData.profileImage) {
                 elements.profile.img.src = userData.profileImage;
             } else if (currentUser.photoURL) {
@@ -142,20 +180,16 @@ function setupRealtimeData() {
     onValue(powerRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // Today's power usage
             const todayUsage = data.today || 0;
             elements.stats.powerUsage.value.textContent = `${todayUsage.toFixed(1)} kWh`;
             
-            // Change from yesterday
             const change = data.changeFromYesterday || 0;
             elements.stats.powerUsage.subtext.textContent = 
                 `${change >= 0 ? '+' : ''}${change}% from yesterday`;
             
-            // Monthly consumption
             const monthlyConsumption = data.monthly || 0;
             elements.stats.monthHistory.value.textContent = `${monthlyConsumption} kWh`;
             
-            // Monthly cost
             const monthlyCost = data.cost || 0;
             elements.stats.monthCost.value.textContent = `Rp ${formatNumber(monthlyCost)}`;
             elements.stats.monthCost.subtext.textContent = 
@@ -168,17 +202,27 @@ function setupRealtimeData() {
     onValue(workshopsRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-            // Update each workshop
             updateWorkshop('2.2', data['2.2']);
             updateWorkshop('2.3', data['2.3']);
             updateWorkshop('2.4', data['2.4']);
         }
     });
 
-    // Online users
+    // Online users - modified to only show online users
     const onlineUsersRef = ref(database, 'onlineUsers');
     onValue(onlineUsersRef, (snapshot) => {
-        updateOnlineUsersList(snapshot.val());
+        const users = snapshot.val();
+        const onlineUsers = {};
+        
+        if (users) {
+            Object.keys(users).forEach(uid => {
+                if (users[uid].isOnline !== false) {
+                    onlineUsers[uid] = users[uid];
+                }
+            });
+        }
+        
+        updateOnlineUsersList(onlineUsers);
     });
 }
 
@@ -191,11 +235,9 @@ function updateWorkshop(workshopId, data) {
     
     if (!workshop) return;
     
-    // Update basic info
     if (workshop.name) workshop.name.textContent = `Workshop ${workshopId}`;
     if (workshop.desc) workshop.desc.textContent = data.description || `${data.deviceCount || 0} active devices`;
     
-    // Update status
     if (workshop.status) {
         workshop.status.textContent = data.status || 'Active';
         workshop.status.style.backgroundColor = 
@@ -203,18 +245,17 @@ function updateWorkshop(workshopId, data) {
             data.status === 'Inactive' ? 'var(--gray)' : 'var(--success)';
     }
     
-    // Update usage and people
     if (workshop.usage) workshop.usage.textContent = `${(data.powerUsage || 0).toFixed(1)} kWh today`;
     if (workshop.people) workshop.people.textContent = `${data.userCount || 0} people`;
 }
 
-// Update online users list
+// Update online users list with location icons
 function updateOnlineUsersList(users) {
     if (!elements.onlineUsers.grid) return;
     
     elements.onlineUsers.grid.innerHTML = '';
     
-    if (!users) {
+    if (!users || Object.keys(users).length === 0) {
         elements.onlineUsers.title.innerHTML = `<i class="fas fa-users"></i> Currently Online (0 Users)`;
         elements.onlineUsers.grid.innerHTML = '<p>No users currently online</p>';
         return;
@@ -226,15 +267,26 @@ function updateOnlineUsersList(users) {
     Object.entries(users).forEach(([userId, user]) => {
         const userCard = document.createElement('div');
         userCard.className = 'user-card';
+        
+        let locationIcon = 'fa-tachometer-alt';
+        if (user.location?.includes('Workshop')) {
+            locationIcon = 'fa-tools';
+        } else if (user.location?.includes('History')) {
+            locationIcon = 'fa-history';
+        } else if (user.location?.includes('Profile')) {
+            locationIcon = 'fa-user';
+        }
+        
         userCard.innerHTML = `
             <img src="${user.avatar || 'https://randomuser.me/api/portraits/lego/1.jpg'}" 
                  alt="${user.name}" 
                  class="user-avatar">
             <div class="user-info">
                 <span class="user-name">${user.name || 'Anonymous'}</span>
+                <span class="user-nim">${user.nim || 'N/A'}</span>
                 <span class="user-status">
                     <span class="status-indicator"></span>
-                    ${user.location || 'Dashboard'}
+                    <i class="fas ${locationIcon}"></i> ${user.location || 'Dashboard'}
                 </span>
             </div>
         `;
@@ -242,17 +294,24 @@ function updateOnlineUsersList(users) {
     });
 }
 
-// Setup presence system
+// Setup presence system with initial location
 function setupPresenceSystem() {
     if (!currentUser) return;
     
     const userStatusRef = ref(database, `status/${currentUser.uid}`);
     const userOnlineRef = ref(database, `onlineUsers/${currentUser.uid}`);
     
-    // Get user data
     const userRef = ref(database, `users/${currentUser.uid}`);
     onValue(userRef, (snapshot) => {
         const userData = snapshot.val();
+        
+        let initialLocation = 'Dashboard';
+        const path = window.location.pathname;
+        if (path.includes('ws22.html')) initialLocation = 'Workshop 2.2';
+        else if (path.includes('ws23.html')) initialLocation = 'Workshop 2.3';
+        else if (path.includes('ws24.html')) initialLocation = 'Workshop 2.4';
+        else if (path.includes('history.html')) initialLocation = 'History Page';
+        else if (path.includes('profile.html')) initialLocation = 'Profile Page';
         
         // Set initial status
         set(userStatusRef, {
@@ -260,13 +319,14 @@ function setupPresenceSystem() {
             lastChanged: serverTimestamp()
         });
         
-        // Set online user data
+        // Set online user data with initial location
         set(userOnlineRef, {
             name: userData?.name || currentUser.displayName || 'User',
             avatar: userData?.profileImage || currentUser.photoURL || 'https://randomuser.me/api/portraits/lego/1.jpg',
-            location: 'Dashboard',
+            location: initialLocation,
             lastActive: serverTimestamp(),
-            nim: userData?.nim || 'N/A'
+            nim: userData?.nim || 'N/A',
+            isOnline: true  // Explicit online status
         });
         
         // Setup disconnect handlers
@@ -275,7 +335,10 @@ function setupPresenceSystem() {
             lastChanged: serverTimestamp()
         });
         
-        onDisconnect(userOnlineRef).remove();
+        onDisconnect(userOnlineRef).update({
+            isOnline: false,  // Mark as offline instead of removing
+            lastActive: serverTimestamp()
+        });
     }, { onlyOnce: true });
 }
 
@@ -284,9 +347,21 @@ function updateUserLocation(location) {
     if (!currentUser) return;
     
     const userOnlineRef = ref(database, `onlineUsers/${currentUser.uid}`);
-    update(userOnlineRef, {
+    const userStatusRef = ref(database, `status/${currentUser.uid}`);
+    
+    // Update both location and status
+    const updates = {
         location: location,
-        lastActive: serverTimestamp()
+        lastActive: serverTimestamp(),
+        isOnline: true
+    };
+    
+    update(userOnlineRef, updates);
+    
+    // Also update the status to ensure they stay marked as online
+    update(userStatusRef, {
+        online: true,
+        lastChanged: serverTimestamp()
     });
 }
 

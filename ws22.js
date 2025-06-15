@@ -1,4 +1,5 @@
-// ws22.js - Workshop 2.2 Control Panel with Firebase Realtime Database
+// ws22.js - Smart Device Control System for Workshop 2.2 with Firebase
+// With exclusive control feature by one user at a time
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -6,321 +7,639 @@ const firebaseConfig = {
     authDomain: "subiot-univers.firebaseapp.com",
     databaseURL: "https://subiot-univers-default-rtdb.firebaseio.com",
     projectId: "subiot-univers",
-    storageBucket: "subiot-univers.firebasestorage.app",
+    storageBucket: "subiot-univers.appspot.com",
     messagingSenderId: "116296674465",
     appId: "1:116296674465:web:d62ad44a9dba75240dd4e0",
     measurementId: "G-XSX0C22H90"
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+const app = firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth();
 
-// DOM Elements
-const powerConsumptionEl = document.getElementById('power-consumption');
-const powerLevelEl = document.getElementById('power-level');
-const powerStatusEl = document.getElementById('power-status');
-const activeDevicesEl = document.getElementById('active-devices');
-const roomStatusEl = document.getElementById('room-status');
-const lastActivityEl = document.getElementById('last-activity');
-const currentTimeEl = document.getElementById('current-time');
-const currentDateEl = document.getElementById('current-date');
-
-// Device elements
-const deviceElements = {
-    'main-light': {
-        switch: document.getElementById('main-light-switch'),
-        status: document.getElementById('main-light-status')
+// Utility function for safe DOM manipulation
+const dom = {
+    get: (id) => {
+        const el = document.getElementById(id);
+        if (!el) console.warn(`Element with ID '${id}' not found`);
+        return el;
     },
-    'work-light': {
-        switch: document.getElementById('work-light-switch'),
-        status: document.getElementById('work-light-status')
+    setText: (el, text) => {
+        if (el && el.textContent !== undefined) el.textContent = text;
     },
-    'emergency-light': {
-        switch: document.getElementById('emergency-light-switch'),
-        status: document.getElementById('emergency-light-status')
+    setHtml: (el, html) => {
+        if (el && el.innerHTML !== undefined) el.innerHTML = html;
     },
-    'ac1': {
-        switch: document.getElementById('ac1-switch'),
-        status: document.getElementById('ac1-status')
+    setStyle: (el, property, value) => {
+        if (el && el.style) el.style[property] = value;
     },
-    'ac2': {
-        switch: document.getElementById('ac2-switch'),
-        status: document.getElementById('ac2-status')
+    addClass: (el, className) => {
+        if (el && el.classList) el.classList.add(className);
     },
-    'fan': {
-        switch: document.getElementById('fan-switch'),
-        status: document.getElementById('fan-status')
+    removeClass: (el, className) => {
+        if (el && el.classList) el.classList.remove(className);
     },
-    'cctv1': {
-        switch: document.getElementById('cctv1-switch'),
-        status: document.getElementById('cctv1-status')
-    },
-    'cctv2': {
-        switch: document.getElementById('cctv2-switch'),
-        status: document.getElementById('cctv2-status')
-    },
-    'dispenser': {
-        switch: document.getElementById('dispenser-switch'),
-        status: document.getElementById('dispenser-status')
+    toggleClass: (el, className, condition) => {
+        if (el && el.classList) {
+            condition ? el.classList.add(className) : el.classList.remove(className);
+        }
     }
 };
 
-// Device power consumption data
-const devicePowerData = {
-    'main-light': { power: 200, type: 'light' },
-    'work-light': { power: 150, type: 'light' },
-    'emergency-light': { power: 100, type: 'light' },
-    'ac1': { power: 1800, type: 'climate' },
-    'ac2': { power: 1800, type: 'climate' },
-    'fan': { power: 120, type: 'climate' },
-    'cctv1': { power: 30, type: 'security' },
-    'cctv2': { power: 30, type: 'security' },
-    'dispenser': { power: 800, type: 'utility' }
+// DOM elements with null checks
+const elements = {
+    // Dashboard elements
+    powerConsumption: dom.get('power-consumption'),
+    powerLevel: dom.get('power-level'),
+    powerStatus: dom.get('power-status'),
+    activeDevices: dom.get('active-devices'),
+    deviceStatus: dom.get('device-status'),
+    currentUserDisplay: dom.get('current-user-display'),
+    currentUserName: dom.get('current-user-name'),
+    currentTime: dom.get('current-time'),
+    currentDate: dom.get('current-date'),
+    controllerDisplay: dom.get('current-controller'),
+    
+    // Device toggles
+    device1Toggle: dom.get('device1-toggle'),
+    device2Toggle: dom.get('device2-toggle'),
+    device3Toggle: dom.get('device3-toggle'),
+    device1Status: dom.get('device1-status'),
+    device2Status: dom.get('device2-status'),
+    device3Status: dom.get('device3-status'),
+    
+    // Device control page
+    deviceControlPage: dom.get('device-control-page'),
+    controlIcon: dom.get('control-icon'),
+    controlDeviceName: dom.get('control-device-name'),
+    controlDeviceStatus: dom.get('control-device-status'),
+    statPower: dom.get('stat-power'),
+    statVoltage: dom.get('stat-voltage'),
+    statCurrent: dom.get('stat-current'),
+    statEnergy: dom.get('stat-energy'),
+    toggleOffBtn: dom.get('toggle-off-btn'),
+    toggleOnBtn: dom.get('toggle-on-btn'),
+    controllerNameDisplay: dom.get('controller-name')
 };
 
-// Current user and room reference
-let currentUserId = null;
-let roomRef = null;
+// Device data and state
+let currentUser = null;
+let currentController = null;
+let selectedDevice = null;
+let energyIntervals = {};
+const deviceColors = {
+    'device1': '#FFC107',
+    'device2': '#4CAF50',
+    'device3': '#2196F3'
+};
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
+    // Check authentication state
     auth.onAuthStateChanged(user => {
         if (user) {
-            currentUserId = user.uid;
-            initializeRoom();
-            setupEventListeners();
-            updateTime();
-            setInterval(updateTime, 1000);
+            // Get user profile data from database
+            database.ref(`users/${user.uid}`).once('value').then(snapshot => {
+                const userData = snapshot.val();
+                currentUser = {
+                    uid: user.uid,
+                    name: userData?.name || user.email.split('@')[0],
+                    nim: userData?.nim || 'N/A'
+                };
+                
+                updateUserDisplay(currentUser.name);
+                loadInitialDeviceStates();
+                
+                // Set up listener for controller changes
+                setupControllerListener();
+                
+                // Update user online status
+                updateUserOnlineStatus(true);
+            }).catch(error => {
+                console.error('Error fetching user data:', error);
+            });
         } else {
+            // Redirect to login page if not authenticated
             window.location.href = 'login.html';
         }
     });
-});
-
-function initializeRoom() {
-    // Reference to Workshop 2.2 in Firebase
-    roomRef = database.ref(`workshops/ws22`);
     
-    // Listen for device status changes
-    roomRef.child('devices').on('value', (snapshot) => {
-        const devicesData = snapshot.val();
-        if (devicesData) {
-            // Update all devices from Firebase data
-            for (const deviceId in devicesData) {
-                if (deviceElements[deviceId]) {
-                    const status = devicesData[deviceId].status || false;
-                    updateDeviceUI(deviceId, status);
-                }
-            }
-            updateDashboard();
-        }
-    });
+    // Set up real-time clock
+    updateClock();
+    setInterval(updateClock, 1000);
     
-    // Listen for room status changes
-    roomRef.child('status').on('value', (snapshot) => {
-        const statusData = snapshot.val();
-        if (statusData) {
-            updateRoomStatusUI(statusData);
+    // Initialize UI elements
+    updateToggleButtons(false, false);
+    
+    // Handle page visibility changes to update online status
+    document.addEventListener('visibilitychange', () => {
+        if (currentUser) {
+            updateUserOnlineStatus(!document.hidden);
         }
     });
 }
 
-function setupEventListeners() {
-    // Add click handlers for all device cards
-    for (const deviceId in deviceElements) {
-        const card = deviceElements[deviceId].status.closest('.device-card');
-        if (card) {
-            card.addEventListener('click', () => toggleDevice(deviceId));
-        }
-    }
+// Update user online status in Firebase
+function updateUserOnlineStatus(isOnline) {
+    if (!currentUser) return;
     
-    // Add change handlers for all toggle switches
-    for (const deviceId in deviceElements) {
-        if (deviceElements[deviceId].switch) {
-            deviceElements[deviceId].switch.addEventListener('change', (e) => {
-                e.stopPropagation(); // Prevent card click from triggering
-                toggleDevice(deviceId);
+    const userStatusRef = database.ref(`status/${currentUser.uid}`);
+    const statusUpdate = {
+        online: isOnline,
+        lastChanged: firebase.database.ServerValue.TIMESTAMP,
+        name: currentUser.name,
+        nim: currentUser.nim
+    };
+    
+    if (isOnline) {
+        // Set online status and setup disconnect handler
+        userStatusRef.set(statusUpdate)
+            .then(() => {
+                userStatusRef.onDisconnect().update({
+                    online: false,
+                    lastChanged: firebase.database.ServerValue.TIMESTAMP
+                });
+            })
+            .catch(error => {
+                console.error('Error setting online status:', error);
             });
-        }
+    } else {
+        userStatusRef.update(statusUpdate)
+            .catch(error => {
+                console.error('Error updating online status:', error);
+            });
     }
-    
-    // Navigation buttons
-    const backBtn = document.querySelector('.back-btn');
-    const profileBtn = document.querySelector('.profile-btn');
-    
-    if (backBtn) backBtn.addEventListener('click', goBack);
-    if (profileBtn) profileBtn.addEventListener('click', goToProfile);
 }
 
-// Toggle device status in Firebase
-function toggleDevice(deviceId) {
-    if (!roomRef) return;
-    
-    // Get current status from UI (opposite of current since we're toggling)
-    const currentStatus = deviceElements[deviceId]?.switch?.checked || false;
-    const newStatus = !currentStatus;
-    
-    // Update in Firebase - FIXED THE TYPO HERE (changed 'devices' to 'devices')
-    roomRef.child(`devices/${deviceId}`).update({
-        status: newStatus,
-        lastUpdated: firebase.database.ServerValue.TIMESTAMP
-    });
-    
-    // Also update room activity timestamp
-    roomRef.child('status').update({
-        lastActivity: firebase.database.ServerValue.TIMESTAMP
-    });
-}
-
-// Update device UI based on status
-function updateDeviceUI(deviceId, status) {
-    const element = deviceElements[deviceId];
-    if (!element) return;
-    
-    if (element.switch) {
-        element.switch.checked = status;
-    }
-    
-    if (element.status) {
-        if (status) {
-            element.status.textContent = deviceId === 'emergency-light' ? 'ACTIVE' : 'ON';
-            element.status.classList.remove('off');
-            element.status.classList.add('on');
+// Set up listener for controller changes
+function setupControllerListener() {
+    database.ref('workshop22/currentController').on('value', snapshot => {
+        currentController = snapshot.val();
+        
+        // Update controller display
+        if (currentController) {
+            // Get controller user details
+            database.ref(`users/${currentController}`).once('value').then(userSnapshot => {
+                const userData = userSnapshot.val();
+                const controllerName = userData?.name || 'Unknown User';
+                const controllerNIM = userData?.nim ? ` (${userData.nim})` : '';
+                
+                dom.setText(elements.controllerDisplay, `Controller: ${controllerName}${controllerNIM}`);
+                dom.setText(elements.controllerNameDisplay, `${controllerName}${controllerNIM}`);
+            }).catch(error => {
+                console.error('Error fetching controller data:', error);
+            });
         } else {
-            element.status.textContent = deviceId === 'emergency-light' ? 'STANDBY' : 'OFF';
-            element.status.classList.remove('on');
-            element.status.classList.add('off');
+            dom.setText(elements.controllerDisplay, 'No active controller');
+            dom.setText(elements.controllerNameDisplay, 'None');
+        }
+        
+        // Disable controls if another user is controlling
+        const disableControls = currentController && currentController !== currentUser?.uid;
+        
+        if (elements.device1Toggle) elements.device1Toggle.disabled = disableControls;
+        if (elements.device2Toggle) elements.device2Toggle.disabled = disableControls;
+        if (elements.device3Toggle) elements.device3Toggle.disabled = disableControls;
+        
+        // Update control page buttons if open
+        if (selectedDevice) {
+            updateToggleButtons(
+                elements.toggleOffBtn && elements.toggleOffBtn.style.display === 'flex',
+                !disableControls
+            );
+        }
+        
+        // Add visual indicator
+        document.querySelectorAll('.device-card').forEach(card => {
+            if (card) {
+                disableControls ? dom.addClass(card, 'disabled-control') : dom.removeClass(card, 'disabled-control');
+            }
+        });
+    }, error => {
+        console.error('Controller listener error:', error);
+    });
+}
+
+// Load initial device states from Firebase
+function loadInitialDeviceStates() {
+    database.ref('workshop22/devices').on('value', snapshot => {
+        if (snapshot.exists()) {
+            const deviceData = snapshot.val();
+            updateDeviceUI(deviceData);
+            updateDashboard(deviceData);
+            
+            // If we have a selected device, update its control page
+            if (selectedDevice && deviceData[selectedDevice]) {
+                updateDeviceControlPage(selectedDevice, deviceData[selectedDevice]);
+            }
+        }
+    }, error => {
+        console.error('Device states listener error:', error);
+    });
+}
+
+// Update device UI based on Firebase data
+function updateDeviceUI(deviceData) {
+    for (const deviceId in deviceData) {
+        const device = deviceData[deviceId];
+        const toggleElement = elements[`${deviceId}Toggle`];
+        const statusElement = elements[`${deviceId}Status`];
+        
+        if (toggleElement) {
+            toggleElement.checked = device.on;
+        }
+        
+        if (statusElement) {
+            dom.setText(statusElement, device.on ? 'ON' : 'OFF');
+            dom.toggleClass(statusElement, 'on', device.on);
+            dom.toggleClass(statusElement, 'off', !device.on);
         }
     }
 }
 
 // Update dashboard metrics
-function updateDashboard() {
-    if (!roomRef) return;
+function updateDashboard(deviceData) {
+    let totalPower = 0;
+    let activeCount = 0;
+    let inUseCount = 0;
     
-    // Calculate current power usage
-    roomRef.child('devices').once('value').then((snapshot) => {
-        const devicesData = snapshot.val();
-        let totalPower = 0;
-        let activeCount = 0;
-        
-        for (const deviceId in devicesData) {
-            if (devicesData[deviceId]?.status && devicePowerData[deviceId]) {
-                totalPower += devicePowerData[deviceId].power;
-                activeCount++;
+    // Calculate totals
+    for (const deviceId in deviceData) {
+        if (deviceData[deviceId].on) {
+            totalPower += deviceData[deviceId].power || 0;
+            activeCount++;
+            if (deviceData[deviceId].user) {
+                inUseCount++;
             }
         }
+    }
+    
+    // Update power consumption
+    dom.setText(elements.powerConsumption, `${totalPower.toFixed(2)}W`);
+    
+    // Update power meter (max 3000W for visualization)
+    const powerPercentage = Math.min((totalPower / 3000) * 100, 100);
+    dom.setStyle(elements.powerLevel, 'width', `${powerPercentage}%`);
+    
+    // Update active devices
+    dom.setText(elements.activeDevices, activeCount.toString());
+    
+    // Update power status message
+    let powerStatusMessage = '';
+    if (totalPower === 0) {
+        powerStatusMessage = 'All devices are off';
+    } else if (totalPower < 1000) {
+        powerStatusMessage = 'Low power usage';
+    } else if (totalPower < 2000) {
+        powerStatusMessage = 'Moderate power usage';
+    } else {
+        powerStatusMessage = 'High power usage!';
+    }
+    dom.setText(elements.powerStatus, powerStatusMessage);
+    
+    // Update device status
+    let deviceStatusMessage = '';
+    if (inUseCount === 3) {
+        deviceStatusMessage = 'Fully Occupied';
+    } else if (inUseCount > 0) {
+        deviceStatusMessage = 'Partially Available';
+    } else {
+        deviceStatusMessage = 'Available';
+    }
+    dom.setText(elements.deviceStatus, deviceStatusMessage);
+}
+
+// Update clock display
+function updateClock() {
+    const now = new Date();
+    const timeOptions = { hour: '2-digit', minute: '2-digit' };
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+    
+    dom.setText(elements.currentTime, now.toLocaleTimeString([], timeOptions));
+    dom.setText(elements.currentDate, now.toLocaleDateString([], dateOptions));
+}
+
+// Toggle device state
+function toggleDeviceState(event, deviceId) {
+    if (!event) return;
+    event.stopPropagation(); // Prevent triggering the card click
+    
+    if (!currentUser) {
+        alert('Please login to control devices');
+        return;
+    }
+    
+    // Check if another user is currently controlling
+    if (currentController && currentController !== currentUser.uid) {
+        alert('Another user is currently controlling the devices. Please wait.');
+        if (event.target) event.target.checked = !event.target.checked; // Revert toggle state
+        return;
+    }
+    
+    const isChecked = event.target?.checked;
+    const updates = {};
+    
+    if (isChecked) {
+        // Set this user as current controller
+        updates['workshop22/currentController'] = currentUser.uid;
         
-        // Update power consumption display
-        if (powerConsumptionEl) {
-            powerConsumptionEl.textContent = `${totalPower}W`;
-        }
+        // Turn on the device
+        updates[`workshop22/devices/${deviceId}/on`] = true;
+        updates[`workshop22/devices/${deviceId}/user`] = {
+            id: currentUser.uid,
+            name: currentUser.name,
+            nim: currentUser.nim,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        // Set random power consumption between 100W and 1000W
+        updates[`workshop22/devices/${deviceId}/power`] = Math.floor(Math.random() * 900) + 100;
+        // Standard voltage with slight variation
+        updates[`workshop22/devices/${deviceId}/voltage`] = 220 + (Math.random() * 10 - 5);
+    } else {
+        // Turn off the device
+        updates[`workshop22/devices/${deviceId}/on`] = false;
+        updates[`workshop22/devices/${deviceId}/user`] = null;
+        updates[`workshop22/devices/${deviceId}/power`] = 0;
+        updates[`workshop22/devices/${deviceId}/voltage`] = 0;
+        updates[`workshop22/devices/${deviceId}/current`] = 0;
         
-        // Update power meter (max 4000W for visualization)
-        if (powerLevelEl) {
-            const powerPercentage = Math.min((totalPower / 4000) * 100, 100);
-            powerLevelEl.style.width = `${powerPercentage}%`;
-        }
-        
-        // Update power status message
-        if (powerStatusEl) {
-            if (totalPower === 0) {
-                powerStatusEl.textContent = 'All devices are off';
-            } else if (totalPower < 1000) {
-                powerStatusEl.textContent = 'Low power usage';
-            } else if (totalPower < 2500) {
-                powerStatusEl.textContent = 'Moderate power usage';
-            } else {
-                powerStatusEl.textContent = 'High power usage!';
-            }
-        }
-        
-        // Update active devices count
-        if (activeDevicesEl) {
-            activeDevicesEl.textContent = activeCount;
-        }
-        
-        // Update these values in Firebase
-        roomRef.child('status').update({
-            currentPower: totalPower,
-            activeDevices: activeCount,
-            lastUpdated: firebase.database.ServerValue.TIMESTAMP
-        });
+        // If all devices are off, release control
+        checkAndReleaseControl(updates);
+        return;
+    }
+    
+    database.ref().update(updates).catch(error => {
+        console.error('Error updating device state:', error);
+        // Revert the toggle if update fails
+        if (event.target) event.target.checked = !isChecked;
     });
 }
 
-// Update room status UI
-function updateRoomStatusUI(statusData) {
-    // Update room occupied status
-    if (roomStatusEl) {
-        if (statusData.occupied) {
-            roomStatusEl.textContent = 'Occupied';
-            roomStatusEl.style.color = 'var(--success)';
-        } else {
-            roomStatusEl.textContent = 'Vacant';
-            roomStatusEl.style.color = 'var(--danger)';
+// Check if all devices are off and release control if true
+function checkAndReleaseControl(updates) {
+    database.ref('workshop22/devices').once('value').then(devicesSnapshot => {
+        let anyDeviceOn = false;
+        devicesSnapshot.forEach(device => {
+            if (device.val().on) anyDeviceOn = true;
+        });
+        
+        if (!anyDeviceOn) {
+            updates['workshop22/currentController'] = null;
         }
+        
+        database.ref().update(updates).catch(error => {
+            console.error('Error updating device state:', error);
+        });
+    }).catch(error => {
+        console.error('Error checking device states:', error);
+    });
+}
+
+// Show device control page
+function showDeviceControl(deviceId) {
+    if (!deviceId) return;
+    
+    selectedDevice = deviceId;
+    
+    // Get current device data from Firebase
+    database.ref(`workshop22/devices/${deviceId}`).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+            const deviceData = snapshot.val();
+            updateDeviceControlPage(deviceId, deviceData);
+            
+            // Show the control page
+            if (elements.deviceControlPage) {
+                elements.deviceControlPage.style.display = 'block';
+                elements.deviceControlPage.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    }).catch(error => {
+        console.error('Error fetching device data:', error);
+    });
+}
+
+// Update device control page UI
+function updateDeviceControlPage(deviceId, deviceData) {
+    if (!deviceId || !deviceData) return;
+    
+    // Update basic info
+    const deviceName = deviceId.charAt(0).toUpperCase() + deviceId.slice(1);
+    dom.setText(elements.controlDeviceName, deviceName);
+    dom.setText(elements.controlDeviceStatus, `Status: ${deviceData.on ? 'ON' : 'OFF'}`);
+    if (elements.controlIcon) {
+        elements.controlIcon.style.backgroundColor = deviceColors[deviceId] || '#cccccc';
     }
     
-    // Update last activity time
-    if (lastActivityEl) {
-        if (statusData.lastActivity) {
-            const lastActive = new Date(statusData.lastActivity);
-            const now = new Date();
-            const diffMinutes = Math.floor((now - lastActive) / (1000 * 60));
-            
-            if (diffMinutes < 1) {
-                lastActivityEl.textContent = 'Active now';
-            } else if (diffMinutes < 60) {
-                lastActivityEl.textContent = `${diffMinutes} min ago`;
-            } else {
-                const diffHours = Math.floor(diffMinutes / 60);
-                lastActivityEl.textContent = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-            }
+    // Calculate current if not already set
+    const current = deviceData.on ? (deviceData.power / (deviceData.voltage || 220)) : 0;
+    
+    // Update stats
+    dom.setText(elements.statPower, `${(deviceData.power || 0).toFixed(2)} W`);
+    dom.setText(elements.statVoltage, `${(deviceData.voltage || 0).toFixed(2)} V`);
+    dom.setText(elements.statCurrent, `${current.toFixed(2)} A`);
+    
+    // Update energy (calculate based on time if device is on)
+    if (deviceData.on) {
+        startEnergyCalculation(deviceId, deviceData);
+    } else {
+        stopEnergyCalculation(deviceId);
+        dom.setText(elements.statEnergy, '0.0000 kWh');
+    }
+    
+    // Update toggle buttons state
+    const isController = !currentController || currentController === currentUser?.uid;
+    updateToggleButtons(deviceData.on, isController);
+    
+    // Show current user if device is in use
+    if (elements.currentUserDisplay && elements.currentUserName) {
+        if (deviceData.on && deviceData.user) {
+            elements.currentUserDisplay.style.display = 'flex';
+            const userNIM = deviceData.user.nim ? ` (${deviceData.user.nim})` : '';
+            dom.setText(elements.currentUserName, `${deviceData.user.name || "Unknown User"}${userNIM}`);
         } else {
-            lastActivityEl.textContent = 'No recent activity';
+            elements.currentUserDisplay.style.display = 'none';
         }
     }
 }
 
-// Update time function
-function updateTime() {
-    const now = new Date();
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// Update toggle buttons state
+function updateToggleButtons(isOn, isController) {
+    if (!elements.toggleOffBtn || !elements.toggleOnBtn) return;
     
-    // Format time (HH:MM AM/PM)
-    let hours = now.getHours();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const minutes = now.getMinutes().toString().padStart(2, '0');
+    elements.toggleOffBtn.style.display = isOn ? 'flex' : 'none';
+    elements.toggleOnBtn.style.display = isOn ? 'none' : 'flex';
     
-    // Format date (Weekday, Day Month Year)
-    const weekday = days[now.getDay()];
-    const day = now.getDate();
-    const month = months[now.getMonth()];
-    const year = now.getFullYear();
+    // Disable buttons if not controller
+    elements.toggleOffBtn.disabled = !isController;
+    elements.toggleOnBtn.disabled = !isController;
     
-    if (currentTimeEl) currentTimeEl.textContent = `${hours}:${minutes} ${ampm}`;
-    if (currentDateEl) currentDateEl.textContent = `${weekday}, ${day} ${month} ${year}`;
+    // Add tooltip if disabled
+    if (!isController) {
+        elements.toggleOffBtn.title = "Control locked by another user";
+        elements.toggleOnBtn.title = "Control locked by another user";
+    } else {
+        elements.toggleOffBtn.title = "";
+        elements.toggleOnBtn.title = "";
+    }
+}
+
+// Start energy calculation for a device
+function startEnergyCalculation(deviceId, deviceData) {
+    if (!deviceId || !deviceData) return;
     
-    // Also update time in Firebase if room is initialized
-    if (roomRef) {
-        roomRef.child('status').update({
-            currentTime: now.toISOString(),
-            lastUpdated: firebase.database.ServerValue.TIMESTAMP
-        });
+    // Stop any existing interval for this device
+    stopEnergyCalculation(deviceId);
+    
+    // Get the timestamp when the device was turned on
+    const startTime = deviceData.user?.timestamp ? new Date(deviceData.user.timestamp) : new Date();
+    
+    // Calculate energy in kWh (energy = power * time / 1000)
+    const updateEnergy = () => {
+        const hours = (new Date() - startTime) / (1000 * 60 * 60);
+        const energy = ((deviceData.power || 0) * hours) / 1000;
+        
+        // Update Firebase and UI
+        database.ref(`workshop22/devices/${deviceId}/energy`).set(energy)
+            .catch(error => {
+                console.error('Error updating energy:', error);
+            });
+        dom.setText(elements.statEnergy, `${energy.toFixed(4)} kWh`);
+    };
+    
+    // Update immediately and set interval
+    updateEnergy();
+    energyIntervals[deviceId] = setInterval(updateEnergy, 1000);
+}
+
+// Stop energy calculation for a device
+function stopEnergyCalculation(deviceId) {
+    if (!deviceId) return;
+    
+    if (energyIntervals[deviceId]) {
+        clearInterval(energyIntervals[deviceId]);
+        delete energyIntervals[deviceId];
+    }
+}
+
+// Toggle device from control page
+function toggleDevice(turnOn) {
+    if (!selectedDevice || !currentUser) return;
+    
+    // Check if another user is currently controlling
+    if (currentController && currentController !== currentUser.uid) {
+        alert('Another user is currently controlling the devices. Please wait.');
+        return;
+    }
+    
+    const updates = {};
+    
+    if (turnOn) {
+        // Set this user as current controller
+        updates['workshop22/currentController'] = currentUser.uid;
+        
+        // Turn on the device
+        updates[`workshop22/devices/${selectedDevice}/on`] = true;
+        updates[`workshop22/devices/${selectedDevice}/user`] = {
+            id: currentUser.uid,
+            name: currentUser.name,
+            nim: currentUser.nim,
+            timestamp: firebase.database.ServerValue.TIMESTAMP
+        };
+        // Set random power consumption between 100W and 1000W
+        updates[`workshop22/devices/${selectedDevice}/power`] = Math.floor(Math.random() * 900) + 100;
+        // Standard voltage with slight variation
+        updates[`workshop22/devices/${selectedDevice}/voltage`] = 220 + (Math.random() * 10 - 5);
+    } else {
+        // Turn off the device
+        updates[`workshop22/devices/${selectedDevice}/on`] = false;
+        updates[`workshop22/devices/${selectedDevice}/user`] = null;
+        updates[`workshop22/devices/${selectedDevice}/power`] = 0;
+        updates[`workshop22/devices/${selectedDevice}/voltage`] = 0;
+        updates[`workshop22/devices/${selectedDevice}/current`] = 0;
+        updates[`workshop22/devices/${selectedDevice}/energy`] = 0;
+        
+        // If all devices are off, release control
+        checkAndReleaseControl(updates);
+        return;
+    }
+    
+    database.ref().update(updates).catch(error => {
+        console.error('Error updating device state:', error);
+    });
+}
+
+// Update user display
+function updateUserDisplay(userName) {
+    if (elements.currentUserDisplay) {
+        dom.setText(elements.currentUserDisplay, userName);
+    }
+    if (elements.currentUser) {
+        dom.setText(elements.currentUser, userName);
     }
 }
 
 // Navigation functions
 function goBack() {
-    window.history.back();
+    if (elements.deviceControlPage) {
+        elements.deviceControlPage.style.display = 'none';
+    }
 }
 
 function goToProfile() {
-    window.location.href = "profile.html";
+    window.location.href = 'profil.html';
 }
+
+function goToDashboard() {
+    window.location.href = 'dashboard.html';
+}
+
+// Initialize event listeners
+function setupEventListeners() {
+    // Device toggles
+    if (elements.device1Toggle) {
+        elements.device1Toggle.addEventListener('change', (e) => toggleDeviceState(e, 'device1'));
+    }
+    if (elements.device2Toggle) {
+        elements.device2Toggle.addEventListener('change', (e) => toggleDeviceState(e, 'device2'));
+    }
+    if (elements.device3Toggle) {
+        elements.device3Toggle.addEventListener('change', (e) => toggleDeviceState(e, 'device3'));
+    }
+    
+    // Device cards
+    const deviceCards = document.querySelectorAll('.device-card');
+    if (deviceCards) {
+        deviceCards.forEach(card => {
+            if (card) {
+                const deviceId = card.getAttribute('data-device');
+                card.addEventListener('click', () => showDeviceControl(deviceId));
+            }
+        });
+    }
+    
+    // Control buttons
+    if (elements.toggleOnBtn) {
+        elements.toggleOnBtn.addEventListener('click', () => toggleDevice(true));
+    }
+    if (elements.toggleOffBtn) {
+        elements.toggleOffBtn.addEventListener('click', () => toggleDevice(false));
+    }
+    
+    // Navigation buttons
+    const backBtn = document.querySelector('.back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', goBack);
+    }
+    
+    const profileBtn = document.querySelector('.profile-btn');
+    if (profileBtn) {
+        profileBtn.addEventListener('click', goToProfile);
+    }
+}
+
+// Initialize the app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initApp();
+    setupEventListeners();
+});
